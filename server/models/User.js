@@ -190,7 +190,13 @@ const userSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }
+  },
+
+  // Saved jobs
+  savedJobs: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job'
+  }]
 }, {
   timestamps: true
 });

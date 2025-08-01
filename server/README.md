@@ -43,6 +43,25 @@ Backend server for Fixify - a local service marketplace built with Node.js, Expr
 - `PUT /api/auth/notifications/read-all` - Mark all notifications as read
 - `DELETE /api/auth/account` - Delete user account
 
+### Job Routes
+- `GET /api/jobs` - Get all jobs with filtering and pagination
+- `GET /api/jobs/:id` - Get a single job by ID
+- `POST /api/jobs` - Create a new job
+- `PUT /api/jobs/:id` - Update a job (owner only)
+- `DELETE /api/jobs/:id` - Delete a job (owner only)
+- `POST /api/jobs/:id/accept` - Accept a job
+- `POST /api/jobs/:id/complete` - Complete a job
+- `POST /api/jobs/:id/cancel` - Cancel a job
+- `POST /api/jobs/:id/save` - Save/unsave a job
+- `GET /api/jobs/my-jobs` - Get user's posted jobs
+- `GET /api/jobs/accepted-jobs` - Get user's accepted jobs
+- `GET /api/jobs/saved` - Get user's saved jobs
+- `GET /api/jobs/categories` - Get available job categories
+- `GET /api/jobs/stats/overview` - Get job statistics overview
+- `GET /api/jobs/stats/my-stats` - Get user's job statistics
+- `GET /api/jobs/nearby` - Get nearby jobs by location
+- `GET /api/jobs/search` - Search jobs with filters
+
 ### General Routes
 - `GET /` - Basic API info
 - `GET /api/health` - Health check endpoint

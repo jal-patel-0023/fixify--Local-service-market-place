@@ -294,6 +294,15 @@ jobSchema.methods.addApplication = function() {
   return this.save();
 };
 
+// Method to update stats
+jobSchema.methods.updateStats = function(field, increment) {
+  if (this.stats[field] !== undefined) {
+    this.stats[field] += increment;
+    return this.save();
+  }
+  return Promise.resolve(this);
+};
+
 // Pre-save middleware to validate budget
 jobSchema.pre('save', function(next) {
   if (this.budget.min > this.budget.max) {

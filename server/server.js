@@ -36,7 +36,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fixify', 
 .catch(err => console.error('MongoDB connection error:', err));
 
 // Import routes
-const { authRoutes } = require('./routes');
+const { authRoutes, jobRoutes } = require('./routes');
 
 // Basic route
 app.get('/', (req, res) => {
@@ -54,6 +54,7 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/jobs', jobRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
