@@ -56,7 +56,7 @@ fixify/
 ## 🔧 Development Status
 
 - [x] Backend server setup
-- [ ] Database models
+- [x] Database models
 - [ ] Authentication integration
 - [ ] Job posting functionality
 - [ ] Job browsing and filtering
