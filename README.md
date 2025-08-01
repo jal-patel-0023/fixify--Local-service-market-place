@@ -60,7 +60,7 @@ fixify/
 - [x] Authentication integration
 - [x] Job posting functionality
 - [x] Job browsing and filtering
-- [ ] Frontend setup
+- [x] Frontend setup
 - [ ] UI components
 - [ ] Map integration
 - [ ] Messaging system
