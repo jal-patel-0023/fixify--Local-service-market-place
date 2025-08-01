@@ -212,6 +212,19 @@ jobSchema.index({ 'budget.min': 1, 'budget.max': 1 });
 jobSchema.index({ preferredDate: 1 });
 jobSchema.index({ createdAt: -1 });
 
+// Text index for search functionality
+jobSchema.index({ 
+  title: 'text', 
+  description: 'text', 
+  tags: 'text' 
+}, {
+  weights: {
+    title: 10,
+    description: 5,
+    tags: 3
+  }
+});
+
 // Virtual for budget range
 jobSchema.virtual('budgetRange').get(function() {
   if (this.budget.min === this.budget.max) {

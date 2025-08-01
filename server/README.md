@@ -62,6 +62,19 @@ Backend server for Fixify - a local service marketplace built with Node.js, Expr
 - `GET /api/jobs/nearby` - Get nearby jobs by location
 - `GET /api/jobs/search` - Search jobs with filters
 
+### Browse Routes
+- `GET /api/browse/jobs` - Advanced job browsing with comprehensive filtering
+- `GET /api/browse/recommendations` - Get personalized job recommendations
+- `GET /api/browse/trending` - Get trending jobs by period
+- `GET /api/browse/category/:category` - Get jobs by category with statistics
+- `GET /api/browse/search` - Advanced search with multiple filters
+- `GET /api/browse/filters` - Get available filter options and statistics
+- `GET /api/browse/stats` - Get comprehensive browse statistics
+- `GET /api/browse/map` - Get jobs for map view
+- `GET /api/browse/saved` - Get user's saved jobs
+- `GET /api/browse/nearby` - Get nearby jobs by location
+- `GET /api/browse/urgent` - Get urgent jobs
+
 ### General Routes
 - `GET /` - Basic API info
 - `GET /api/health` - Health check endpoint

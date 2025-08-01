@@ -59,7 +59,7 @@ fixify/
 - [x] Database models
 - [x] Authentication integration
 - [x] Job posting functionality
-- [ ] Job browsing and filtering
+- [x] Job browsing and filtering
 - [ ] Frontend setup
 - [ ] UI components
 - [ ] Map integration
