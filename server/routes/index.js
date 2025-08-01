@@ -1,2 +1,5 @@
-// Routes will be added here
-module.exports = {}; 
+const authRoutes = require('./auth');
+
+module.exports = {
+  authRoutes
+}; 

@@ -28,6 +28,22 @@ Backend server for Fixify - a local service marketplace built with Node.js, Expr
 
 ## API Endpoints
 
+### Authentication Routes
+- `GET /api/auth/health` - Auth service health check
+- `GET /api/auth/me` - Get current user profile
+- `PUT /api/auth/profile` - Update user profile
+- `PUT /api/auth/location` - Update user location
+- `PUT /api/auth/skills` - Update user skills
+- `PUT /api/auth/preferences` - Update user preferences
+- `GET /api/auth/stats` - Get user statistics
+- `POST /api/auth/verify` - Verify user session
+- `POST /api/auth/refresh` - Refresh user session
+- `GET /api/auth/notifications` - Get user notifications
+- `PUT /api/auth/notifications/:id/read` - Mark notification as read
+- `PUT /api/auth/notifications/read-all` - Mark all notifications as read
+- `DELETE /api/auth/account` - Delete user account
+
+### General Routes
 - `GET /` - Basic API info
 - `GET /api/health` - Health check endpoint
 

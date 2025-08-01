@@ -35,6 +35,9 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fixify', 
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+// Import routes
+const { authRoutes } = require('./routes');
+
 // Basic route
 app.get('/', (req, res) => {
   res.json({ message: 'Fixify API is running!' });
@@ -48,6 +51,9 @@ app.get('/api/health', (req, res) => {
     uptime: process.uptime()
   });
 });
+
+// API Routes
+app.use('/api/auth', authRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

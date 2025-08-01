@@ -57,7 +57,7 @@ fixify/
 
 - [x] Backend server setup
 - [x] Database models
-- [ ] Authentication integration
+- [x] Authentication integration
 - [ ] Job posting functionality
 - [ ] Job browsing and filtering
 - [ ] Frontend setup
