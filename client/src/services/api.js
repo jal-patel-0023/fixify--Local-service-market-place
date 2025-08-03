@@ -137,6 +137,17 @@ export const apiService = {
     nearby: (params) => api.get(apiEndpoints.browse.nearby, { params }),
     urgent: (params) => api.get(apiEndpoints.browse.urgent, { params }),
   },
+
+  // Message endpoints
+  messages: {
+    getConversations: () => api.get('/messages/conversations'),
+    getMessages: (conversationId) => api.get(`/messages/conversations/${conversationId}`),
+    sendMessage: (data) => api.post('/messages/send', data),
+    markAsRead: (conversationId) => api.put(`/messages/conversations/${conversationId}/read`),
+    deleteMessage: (messageId) => api.delete(`/messages/${messageId}`),
+    getUnreadCount: () => api.get('/messages/unread/count'),
+    searchMessages: (query) => api.get('/messages/search', { params: { query } })
+  },
 };
 
 // Upload service for images

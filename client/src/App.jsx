@@ -20,6 +20,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import AuthPage from './pages/AuthPage';
 import NotFoundPage from './pages/NotFoundPage';
+import MessagingPage from './components/Messaging/MessagingPage';
 
 // Hooks
 import { useAuth } from './hooks/useAuth';
@@ -77,6 +78,14 @@ function AppContent() {
             element={
               <SignedIn>
                 <ProfilePage />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <SignedIn>
+                <MessagingPage />
               </SignedIn>
             }
           />

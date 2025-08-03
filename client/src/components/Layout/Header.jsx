@@ -43,6 +43,12 @@ const Header = () => {
                 Post Job
               </Link>
               <Link
+                to="/messages"
+                className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
+              >
+                Messages
+              </Link>
+              <Link
                 to="/dashboard"
                 className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
               >
@@ -105,6 +111,13 @@ const Header = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Post Job
+                </Link>
+                <Link
+                  to="/messages"
+                  className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Messages
                 </Link>
                 <Link
                   to="/dashboard"

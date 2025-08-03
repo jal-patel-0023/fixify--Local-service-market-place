@@ -38,6 +38,7 @@
     "react-router-dom": "^6.8.1",
     "react-virtualized-auto-sizer": "^1.0.20",
     "react-window": "^1.8.8",
+    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^2.0.0",
     "zustand": "^4.4.7"
   },
