@@ -62,7 +62,7 @@ fixify/
 - [x] Job browsing and filtering
 - [x] Frontend setup
 - [x] UI components
-- [ ] Map integration
+- [x] Map integration
 - [ ] Messaging system
 - [ ] Rating system
 

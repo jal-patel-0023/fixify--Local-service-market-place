@@ -183,7 +183,19 @@ export const geocodingService = {
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${config.googleMapsApiKey}`
     );
-    return response.json();
+    const data = await response.json();
+    return data.results[0] || null;
+  },
+
+  // Search address with autocomplete-like functionality
+  searchAddress: async (query) => {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        query
+      )}&key=${config.googleMapsApiKey}`
+    );
+    const data = await response.json();
+    return data.results || [];
   },
 };
 

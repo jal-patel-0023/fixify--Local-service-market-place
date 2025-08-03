@@ -4,6 +4,7 @@ import { MapPin, DollarSign, Calendar, Clock } from 'lucide-react';
 import Button from '../UI/Button';
 import Input from '../UI/Input';
 import Card from '../UI/Card';
+import LocationPicker from '../Map/LocationPicker';
 import { jobCategories } from '../../utils/config';
 
 const JobForm = ({
@@ -16,6 +17,13 @@ const JobForm = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(job?.category || '');
   const [budgetType, setBudgetType] = useState(job?.budget?.type || 'fixed');
+  const [selectedLocation, setSelectedLocation] = useState(
+    job?.location?.coordinates ? {
+      lat: job.location.coordinates[1],
+      lng: job.location.coordinates[0],
+      address: job.location.address?.formatted
+    } : null
+  );
   
   const {
     register,
@@ -47,11 +55,12 @@ const JobForm = ({
         min: parseInt(data.budgetMin) || 0,
         max: parseInt(data.budgetMax) || 0,
       },
-      location: {
+      location: selectedLocation ? {
+        coordinates: [selectedLocation.lng, selectedLocation.lat],
         address: {
-          formatted: data.location,
+          formatted: selectedLocation.address || `${selectedLocation.lat}, ${selectedLocation.lng}`,
         },
-      },
+      } : null,
       requirements: data.requirements ? data.requirements.split(',').map(r => r.trim()) : [],
     };
     
@@ -190,16 +199,19 @@ const JobForm = ({
           </div>
           
           {/* Location */}
-          <Input
-            label="Location"
-            placeholder="Enter your address or city"
-            leftIcon={<MapPin className="h-4 w-4" />}
-            {...register('location', {
-              required: 'Location is required',
-            })}
-            error={errors.location?.message}
-            required
-          />
+          <div>
+            <label className="text-sm font-medium text-secondary-900 dark:text-secondary-100 mb-2 block">
+              Location *
+            </label>
+            <LocationPicker
+              value={selectedLocation}
+              onChange={setSelectedLocation}
+              placeholder="Enter address or click on map"
+            />
+            {!selectedLocation && (
+              <p className="text-sm text-error-600 mt-1">Please select a location</p>
+            )}
+          </div>
           
           {/* Date and Time */}
           <div className="grid grid-cols-2 gap-4">
@@ -238,7 +250,7 @@ const JobForm = ({
               type="submit"
               variant="primary"
               loading={loading}
-              disabled={!selectedCategory}
+              disabled={!selectedCategory || !selectedLocation}
               className="flex-1"
             >
               {job ? 'Update Job' : 'Post Job'}
