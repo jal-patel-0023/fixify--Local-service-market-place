@@ -64,7 +64,7 @@ fixify/
 - [x] UI components
 - [x] Map integration
 - [x] Messaging system
-- [ ] Rating system
+- [x] Rating system
 
 ## 📝 Environment Variables
 

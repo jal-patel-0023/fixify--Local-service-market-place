@@ -47,6 +47,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fixify', 
 // Import routes
 const { authRoutes, jobRoutes, browseRoutes } = require('./routes');
 const messageRoutes = require('./routes/messages');
+const reviewRoutes = require('./routes/reviews');
 
 // Basic route
 app.get('/', (req, res) => {
@@ -67,6 +68,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/browse', browseRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

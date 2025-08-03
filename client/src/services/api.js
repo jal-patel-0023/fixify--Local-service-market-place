@@ -148,6 +148,19 @@ export const apiService = {
     getUnreadCount: () => api.get('/messages/unread/count'),
     searchMessages: (query) => api.get('/messages/search', { params: { query } })
   },
+
+  // Review endpoints
+  reviews: {
+    createReview: (data) => api.post('/reviews', data),
+    getUserReviews: (userId, params) => api.get(`/reviews/user/${userId}`, { params }),
+    getUserReviewStats: (userId) => api.get(`/reviews/user/${userId}/stats`),
+    updateReview: (reviewId, data) => api.put(`/reviews/${reviewId}`, data),
+    deleteReview: (reviewId) => api.delete(`/reviews/${reviewId}`),
+    markReviewHelpful: (reviewId, isHelpful) => api.post(`/reviews/${reviewId}/helpful`, { isHelpful }),
+    flagReview: (reviewId, reason) => api.post(`/reviews/${reviewId}/flag`, { reason }),
+    respondToReview: (reviewId, content) => api.post(`/reviews/${reviewId}/respond`, { content }),
+    getJobReviews: (jobId, params) => api.get(`/reviews/job/${jobId}`, { params })
+  },
 };
 
 // Upload service for images

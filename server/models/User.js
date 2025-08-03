@@ -95,33 +95,20 @@ const userSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
-    reviews: [{
-      reviewer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-      },
-      rating: {
-        type: Number,
-        required: true,
-        min: 1,
-        max: 5
-      },
-      comment: {
-        type: String,
-        trim: true,
-        maxlength: 500
-      },
-      jobId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Job',
-        required: true
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now
-      }
-    }]
+    categories: {
+      communication: { type: Number, default: 0 },
+      quality: { type: Number, default: 0 },
+      timeliness: { type: Number, default: 0 },
+      professionalism: { type: Number, default: 0 },
+      value: { type: Number, default: 0 }
+    },
+    distribution: {
+      1: { type: Number, default: 0 },
+      2: { type: Number, default: 0 },
+      3: { type: Number, default: 0 },
+      4: { type: Number, default: 0 },
+      5: { type: Number, default: 0 }
+    }
   },
   
   // User preferences and settings
@@ -171,6 +158,20 @@ const userSchema = new mongoose.Schema({
     enum: ['client', 'helper', 'both'],
     default: 'client'
   },
+
+  // Admin and moderation roles
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
+  isModerator: {
+    type: Boolean,
+    default: false
+  },
+  adminPermissions: [{
+    type: String,
+    enum: ['users', 'jobs', 'reviews', 'analytics', 'settings']
+  }],
   
   // Statistics
   stats: {
