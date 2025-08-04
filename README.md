@@ -67,6 +67,7 @@ fixify/
 - [x] Rating system
 - [x] Admin Panel
 - [x] Review Moderation Component
+- [x] Analytics Dashboard
 
 ## 📝 Environment Variables
 

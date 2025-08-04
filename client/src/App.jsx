@@ -25,6 +25,7 @@ import AdminPage from './pages/AdminPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminJobsPage from './pages/AdminJobsPage';
 import AdminReviewsPage from './pages/AdminReviewsPage';
+import AdminAnalyticsPage from './pages/AdminAnalyticsPage';
 
 // Hooks
 import { useAuth } from './hooks/useAuth';
@@ -124,6 +125,14 @@ function AppContent() {
             element={
               <SignedIn>
                 <AdminReviewsPage />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/admin/analytics"
+            element={
+              <SignedIn>
+                <AdminAnalyticsPage />
               </SignedIn>
             }
           />
