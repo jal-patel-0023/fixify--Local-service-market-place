@@ -70,6 +70,7 @@ fixify/
 - [x] Analytics Dashboard
 - [x] Analytics Dashboard Component
 - [x] Admin Settings Page
+- [x] Enhanced Job Features
 
 ## 📝 Environment Variables
 

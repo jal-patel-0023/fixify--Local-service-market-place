@@ -121,6 +121,10 @@ export const apiService = {
     myStats: () => api.get(apiEndpoints.jobs.myStats),
     nearby: (params) => api.get(apiEndpoints.jobs.nearby, { params }),
     search: (params) => api.get(apiEndpoints.jobs.search, { params }),
+    getTemplates: () => api.get('/jobs/templates'),
+    createTemplate: (data) => api.post('/jobs/templates', data),
+    updateTemplate: (id, data) => api.put(`/jobs/templates/${id}`, data),
+    deleteTemplate: (id) => api.delete(`/jobs/templates/${id}`)
   },
   
   // Browse endpoints
