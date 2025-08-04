@@ -21,6 +21,9 @@ import ProfilePage from './pages/ProfilePage';
 import AuthPage from './pages/AuthPage';
 import NotFoundPage from './pages/NotFoundPage';
 import MessagingPage from './components/Messaging/MessagingPage';
+import AdminPage from './pages/AdminPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import AdminJobsPage from './pages/AdminJobsPage';
 
 // Hooks
 import { useAuth } from './hooks/useAuth';
@@ -86,6 +89,32 @@ function AppContent() {
             element={
               <SignedIn>
                 <MessagingPage />
+              </SignedIn>
+            }
+          />
+          
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <SignedIn>
+                <AdminPage />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <SignedIn>
+                <AdminUsersPage />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/admin/jobs"
+            element={
+              <SignedIn>
+                <AdminJobsPage />
               </SignedIn>
             }
           />

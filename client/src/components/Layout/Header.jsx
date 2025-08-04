@@ -1,15 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
+import { UserButton, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../Providers/ThemeProvider';
-import { Moon, Sun, Menu, X } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import Button from '../UI/Button';
 
 const Header = () => {
-  const { theme, toggleTheme, mounted } = useTheme();
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
 
-  if (!mounted) {
-    return null;
+  const navigation = [
+    { name: 'Browse Jobs', href: '/browse' },
+    { name: 'Post Job', href: '/post-job' },
+    { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Messages', href: '/messages' },
+  ];
+
+  // Add admin link for admin users
+  if (user?.isAdmin) {
+    navigation.push({ name: 'Admin', href: '/admin' });
+  }
+
+  // Add admin link for admin users
+  if (user?.isAdmin) {
+    navigation.push({ name: 'Admin', href: '/admin' });
   }
 
   return (
@@ -17,117 +33,89 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">F</span>
-            </div>
-            <span className="text-xl font-bold text-secondary-900 dark:text-secondary-100">
-              Fixify
-            </span>
-          </Link>
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center">
+              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center mr-2">
+                <span className="text-white font-bold text-lg">F</span>
+              </div>
+              <span className="text-xl font-bold text-secondary-900 dark:text-secondary-100">
+                Fixify
+              </span>
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              to="/browse"
-              className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
-            >
-              Browse Jobs
-            </Link>
-            
-            <SignedIn>
+          <nav className="hidden md:flex space-x-8">
+            {navigation.map((item) => (
               <Link
-                to="/post-job"
-                className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
+                key={item.name}
+                to={item.href}
+                className="text-secondary-600 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-secondary-100 transition-colors"
               >
-                Post Job
+                {item.name}
               </Link>
-              <Link
-                to="/messages"
-                className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
-              >
-                Messages
-              </Link>
-              <Link
-                to="/dashboard"
-                className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
-              >
-                Dashboard
-              </Link>
-            </SignedIn>
+            ))}
           </nav>
 
           {/* Right side */}
           <div className="flex items-center space-x-4">
-            {/* Theme toggle */}
-            <button
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-secondary-600 dark:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-secondary-700 transition-colors"
-              aria-label="Toggle theme"
+              className="p-2"
             >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </Button>
 
-            {/* User menu */}
+            {/* User Menu */}
             <SignedIn>
               <UserButton />
             </SignedIn>
-
             <SignedOut>
-              <Link
-                to="/auth"
-                className="btn btn-primary"
-              >
-                Sign In
+              <Link to="/auth">
+                <Button variant="primary" size="sm">
+                  Sign In
+                </Button>
               </Link>
             </SignedOut>
 
             {/* Mobile menu button */}
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-secondary-600 dark:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-secondary-700 transition-colors"
+              className="md:hidden p-2"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </Button>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-secondary-200 dark:border-secondary-700">
-            <nav className="flex flex-col space-y-4">
-              <Link
-                to="/browse"
-                className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Browse Jobs
-              </Link>
-              
-              <SignedIn>
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 border-t border-secondary-200 dark:border-secondary-700">
+              {navigation.map((item) => (
                 <Link
-                  to="/post-job"
-                  className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
+                  key={item.name}
+                  to={item.href}
+                  className="block px-3 py-2 text-base font-medium text-secondary-600 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-secondary-100"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Post Job
+                  {item.name}
                 </Link>
-                <Link
-                  to="/messages"
-                  className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Messages
-                </Link>
-                <Link
-                  to="/dashboard"
-                  className="text-secondary-600 dark:text-secondary-400 hover:text-secondary-900 dark:hover:text-secondary-100 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-              </SignedIn>
-            </nav>
+              ))}
+            </div>
           </div>
         )}
       </div>

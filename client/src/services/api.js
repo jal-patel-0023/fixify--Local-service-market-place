@@ -161,6 +161,18 @@ export const apiService = {
     respondToReview: (reviewId, content) => api.post(`/reviews/${reviewId}/respond`, { content }),
     getJobReviews: (jobId, params) => api.get(`/reviews/job/${jobId}`, { params })
   },
+
+  // Admin endpoints
+  admin: {
+    getDashboardStats: () => api.get('/admin/dashboard'),
+    getUsers: (params) => api.get('/admin/users', { params }),
+    updateUserStatus: (userId, data) => api.put(`/admin/users/${userId}`, data),
+    getJobsForModeration: (params) => api.get('/admin/jobs', { params }),
+    updateJobStatus: (jobId, data) => api.put(`/admin/jobs/${jobId}`, data),
+    getReviewsForModeration: (params) => api.get('/admin/reviews', { params }),
+    updateReviewStatus: (reviewId, data) => api.put(`/admin/reviews/${reviewId}`, data),
+    getAnalytics: (params) => api.get('/admin/analytics', { params })
+  },
 };
 
 // Upload service for images
