@@ -120,3 +120,6 @@ coverage/
 # Local configuration
 config/local.js
 config/local.json 
+
+
+report.txt
