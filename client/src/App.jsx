@@ -24,6 +24,7 @@ import MessagingPage from './components/Messaging/MessagingPage';
 import AdminPage from './pages/AdminPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminJobsPage from './pages/AdminJobsPage';
+import AdminReviewsPage from './pages/AdminReviewsPage';
 
 // Hooks
 import { useAuth } from './hooks/useAuth';
@@ -115,6 +116,14 @@ function AppContent() {
             element={
               <SignedIn>
                 <AdminJobsPage />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/admin/reviews"
+            element={
+              <SignedIn>
+                <AdminReviewsPage />
               </SignedIn>
             }
           />

@@ -65,7 +65,8 @@ fixify/
 - [x] Map integration
 - [x] Messaging system
 - [x] Rating system
-- [x] Admin Panel (Optional)
+- [x] Admin Panel
+- [x] Review Moderation Component
 
 ## 📝 Environment Variables
 
