@@ -171,7 +171,9 @@ export const apiService = {
     updateJobStatus: (jobId, data) => api.put(`/admin/jobs/${jobId}`, data),
     getReviewsForModeration: (params) => api.get('/admin/reviews', { params }),
     updateReviewStatus: (reviewId, data) => api.put(`/admin/reviews/${reviewId}`, data),
-    getAnalytics: (params) => api.get('/admin/analytics', { params })
+    getAnalytics: (params) => api.get('/admin/analytics', { params }),
+    getSettings: () => api.get('/admin/settings'),
+    updateSettings: (data) => api.put('/admin/settings', data)
   },
 };
 
