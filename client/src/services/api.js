@@ -204,6 +204,13 @@ export const apiService = {
     resolveDispute: (paymentId, data) => api.put(`/payments/${paymentId}/resolve-dispute`, data),
     getDisputes: (params) => api.get('/payments/disputes', { params })
   },
+
+  // Search endpoints
+  search: {
+    advancedSearch: (params) => api.get('/search/jobs', { params }),
+    searchSuggestions: (params) => api.get('/search/suggestions', { params }),
+    getSearchFilters: () => api.get('/search/filters')
+  },
 };
 
 // Upload service for images
