@@ -106,7 +106,12 @@ export const apiService = {
     updateSkill: (id, data) => api.put(`/auth/skills/${id}`, data),
     deleteSkill: (id) => api.delete(`/auth/skills/${id}`),
     endorseSkill: (skillId, data) => api.post(`/auth/skills/${skillId}/endorse`, data),
-    updateAvailability: (data) => api.put('/auth/availability', data)
+    updateAvailability: (data) => api.put('/auth/availability', data),
+    getUnreadNotificationCount: () => api.get('/auth/notifications/unread/count'),
+    deleteNotification: (id) => api.delete(`/auth/notifications/${id}`),
+    getNotificationPreferences: () => api.get('/auth/notifications/preferences'),
+    updateNotificationPreferences: (data) => api.put('/auth/notifications/preferences', data),
+    getNotificationHistory: () => api.get('/auth/notifications/history')
   },
   
   // Jobs endpoints
