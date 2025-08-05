@@ -100,6 +100,13 @@ export const apiService = {
     getNotifications: (params) => api.get(apiEndpoints.auth.notifications, { params }),
     markNotificationRead: (id) => api.put(`${apiEndpoints.auth.notifications}/${id}/read`),
     markAllNotificationsRead: () => api.put(`${apiEndpoints.auth.notifications}/read-all`),
+    submitVerification: (data) => api.post('/auth/verification', data),
+    getUserSkills: (userId) => api.get(`/auth/users/${userId}/skills`),
+    addSkill: (data) => api.post('/auth/skills', data),
+    updateSkill: (id, data) => api.put(`/auth/skills/${id}`, data),
+    deleteSkill: (id) => api.delete(`/auth/skills/${id}`),
+    endorseSkill: (skillId, data) => api.post(`/auth/skills/${skillId}/endorse`, data),
+    updateAvailability: (data) => api.put('/auth/availability', data)
   },
   
   // Jobs endpoints
