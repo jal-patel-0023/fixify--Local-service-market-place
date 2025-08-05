@@ -191,6 +191,19 @@ export const apiService = {
     getSettings: () => api.get('/admin/settings'),
     updateSettings: (data) => api.put('/admin/settings', data)
   },
+
+  // Payment endpoints
+  payments: {
+    createPaymentIntent: (data) => api.post('/payments/create-intent', data),
+    confirmPayment: (paymentId, data) => api.post(`/payments/${paymentId}/confirm`, data),
+    getPaymentDetails: (paymentId) => api.get(`/payments/details/${paymentId}`),
+    getUserPayments: (params) => api.get('/payments/user', { params }),
+    getPaymentStats: (params) => api.get('/payments/stats', { params }),
+    releaseEscrow: (paymentId) => api.post(`/payments/${paymentId}/release-escrow`),
+    createDispute: (paymentId, data) => api.post(`/payments/${paymentId}/dispute`, data),
+    resolveDispute: (paymentId, data) => api.put(`/payments/${paymentId}/resolve-dispute`, data),
+    getDisputes: (params) => api.get('/payments/disputes', { params })
+  },
 };
 
 // Upload service for images

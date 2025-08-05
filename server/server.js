@@ -49,6 +49,7 @@ const { authRoutes, jobRoutes, browseRoutes } = require('./routes');
 const messageRoutes = require('./routes/messages');
 const reviewRoutes = require('./routes/reviews');
 const adminRoutes = require('./routes/admin');
+const paymentRoutes = require('./routes/payments');
 
 // Basic route
 app.get('/', (req, res) => {
@@ -71,6 +72,7 @@ app.use('/api/browse', browseRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
