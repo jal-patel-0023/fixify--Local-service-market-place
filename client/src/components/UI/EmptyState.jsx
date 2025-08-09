@@ -14,4 +14,5 @@ const EmptyState = ({
   );
 };
 
-export default EmptyState; 
+export default EmptyState;
+export { EmptyState }; 

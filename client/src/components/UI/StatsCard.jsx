@@ -66,4 +66,5 @@ const StatsCard = ({
   );
 };
 
-export default StatsCard; 
+export default StatsCard;
+export { StatsCard }; 

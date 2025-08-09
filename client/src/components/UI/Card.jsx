@@ -57,4 +57,5 @@ Card.Description = CardDescription;
 Card.Content = CardContent;
 Card.Footer = CardFooter;
 
-export default Card; 
+export default Card;
+export { Card }; 
