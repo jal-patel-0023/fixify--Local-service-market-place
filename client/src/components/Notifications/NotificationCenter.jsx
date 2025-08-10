@@ -55,8 +55,8 @@ const NotificationCenter = () => {
   const markReadMutation = useMutation({
     mutationFn: (id) => api.auth.markNotificationRead(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notifications']);
-      queryClient.invalidateQueries(['notification-count']);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notification-count'] });
     }
   });
 
@@ -64,8 +64,8 @@ const NotificationCenter = () => {
   const markAllReadMutation = useMutation({
     mutationFn: () => api.auth.markAllNotificationsRead(),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notifications']);
-      queryClient.invalidateQueries(['notification-count']);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notification-count'] });
       toast.success('All notifications marked as read');
     }
   });
@@ -74,7 +74,7 @@ const NotificationCenter = () => {
   const deleteNotificationMutation = useMutation({
     mutationFn: (id) => api.auth.deleteNotification(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notifications']);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       toast.success('Notification deleted');
     }
   });
@@ -83,7 +83,7 @@ const NotificationCenter = () => {
   const updatePreferencesMutation = useMutation({
     mutationFn: (data) => api.auth.updateNotificationPreferences(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notification-preferences']);
+      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
       toast.success('Notification preferences updated');
       setShowPreferences(false);
     }
@@ -94,7 +94,7 @@ const NotificationCenter = () => {
     mutationFn: (muted) => api.auth.updateNotificationPreferences({ muted }),
     onSuccess: () => {
       setIsMuted(!isMuted);
-      queryClient.invalidateQueries(['notification-preferences']);
+      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
       toast.success(isMuted ? 'Notifications unmuted' : 'Notifications muted');
     }
   });

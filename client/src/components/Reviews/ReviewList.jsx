@@ -18,14 +18,12 @@ const ReviewList = ({
   const [status, setStatus] = useState('approved');
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: reviews, isLoading, error } = useQuery(
-    ['reviews', userId, page, status],
-    () => apiService.reviews.getUserReviews(userId, { page, limit: 10, status }),
-    {
-      keepPreviousData: true,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
-  );
+  const { data: reviews, isLoading, error } = useQuery({
+    queryKey: ['reviews', userId, page, status],
+    queryFn: () => apiService.reviews.getUserReviews(userId, { page, limit: 10, status }),
+    placeholderData: (prev) => prev, // keepPreviousData replacement
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const handlePageChange = (newPage) => {
     setPage(newPage);

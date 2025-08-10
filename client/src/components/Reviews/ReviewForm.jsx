@@ -26,20 +26,18 @@ const ReviewForm = ({
     value: 5
   });
 
-  const createReviewMutation = useMutation(
-    (data) => apiService.reviews.createReview(data),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['reviews', revieweeId]);
-        queryClient.invalidateQueries(['user', revieweeId]);
-        toast.success('Review submitted successfully!');
-        onSuccess?.();
-      },
-      onError: (error) => {
-        toast.error(error.response?.data?.error || 'Failed to submit review');
-      }
+  const createReviewMutation = useMutation({
+    mutationFn: (data) => apiService.reviews.createReview(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', revieweeId] });
+      queryClient.invalidateQueries({ queryKey: ['user', revieweeId] });
+      toast.success('Review submitted successfully!');
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to submit review');
     }
-  );
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();

@@ -43,7 +43,7 @@ const ReviewModeration = () => {
       api.admin.updateReviewStatus(reviewId, { status, reason }),
     onSuccess: () => {
       toast.success('Review status updated successfully');
-      queryClient.invalidateQueries(['admin', 'reviews']);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'reviews'] });
       setSelectedReview(null);
     },
     onError: (error) => {

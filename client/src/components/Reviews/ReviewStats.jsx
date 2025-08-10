@@ -7,13 +7,11 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import EmptyState from '../UI/EmptyState';
 
 const ReviewStats = ({ userId, className = '' }) => {
-  const { data: stats, isLoading, error } = useQuery(
-    ['reviewStats', userId],
-    () => apiService.reviews.getUserReviewStats(userId),
-    {
-      staleTime: 10 * 60 * 1000, // 10 minutes
-    }
-  );
+  const { data: stats, isLoading, error } = useQuery({
+    queryKey: ['reviewStats', userId],
+    queryFn: () => apiService.reviews.getUserReviewStats(userId),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
 
   if (isLoading) {
     return (

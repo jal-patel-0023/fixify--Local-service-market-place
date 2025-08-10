@@ -29,7 +29,7 @@ const AvailabilityManager = ({ user, onUpdate }) => {
     mutationFn: (data) => api.auth.updateAvailability(data),
     onSuccess: () => {
       toast.success('Availability updated successfully');
-      queryClient.invalidateQueries(['user', 'profile']);
+      queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
       onUpdate?.();
     },
     onError: (error) => {

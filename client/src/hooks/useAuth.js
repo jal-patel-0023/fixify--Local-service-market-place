@@ -13,15 +13,13 @@ export const useAuth = () => {
     isLoading: profileLoading,
     error: profileError,
     refetch: refetchProfile,
-  } = useQuery(
-    ['user', 'profile'],
-    () => apiService.auth.me(),
-    {
-      enabled: isSignedIn && isLoaded,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-    }
-  );
+  } = useQuery({
+    queryKey: ['user', 'profile'],
+    queryFn: () => apiService.auth.me(),
+    enabled: isSignedIn && isLoaded,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
   
   // Get user stats
   const {
@@ -29,26 +27,22 @@ export const useAuth = () => {
     isLoading: statsLoading,
     error: statsError,
     refetch: refetchStats,
-  } = useQuery(
-    ['user', 'stats'],
-    () => apiService.auth.getStats(),
-    {
-      enabled: isSignedIn && isLoaded,
-      staleTime: 2 * 60 * 1000, // 2 minutes
-      cacheTime: 5 * 60 * 1000, // 5 minutes
-    }
-  );
+  } = useQuery({
+    queryKey: ['user', 'stats'],
+    queryFn: () => apiService.auth.getStats(),
+    enabled: isSignedIn && isLoaded,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
   
   // Update profile mutation
-  const updateProfileMutation = useMutation(
-    (data) => apiService.auth.updateProfile(data),
-    {
-      onSuccess: () => {
-        refetchProfile();
-        refetchStats();
-      },
-    }
-  );
+  const updateProfileMutation = useMutation({
+    mutationFn: (data) => apiService.auth.updateProfile(data),
+    onSuccess: () => {
+      refetchProfile();
+      refetchStats();
+    },
+  });
   
   // Get user preferences from localStorage
   const getUserPreferences = () => {

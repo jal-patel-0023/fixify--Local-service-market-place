@@ -46,7 +46,7 @@ const JobTemplate = ({ onUseTemplate }) => {
     mutationFn: (data) => api.jobs.createTemplate(data),
     onSuccess: () => {
       toast.success('Template created successfully');
-      queryClient.invalidateQueries(['jobTemplates']);
+      queryClient.invalidateQueries({ queryKey: ['jobTemplates'] });
       setShowCreateModal(false);
       resetForm();
     },
@@ -60,7 +60,7 @@ const JobTemplate = ({ onUseTemplate }) => {
     mutationFn: ({ id, data }) => api.jobs.updateTemplate(id, data),
     onSuccess: () => {
       toast.success('Template updated successfully');
-      queryClient.invalidateQueries(['jobTemplates']);
+      queryClient.invalidateQueries({ queryKey: ['jobTemplates'] });
       setEditingTemplate(null);
       resetForm();
     },
@@ -74,7 +74,7 @@ const JobTemplate = ({ onUseTemplate }) => {
     mutationFn: (id) => api.jobs.deleteTemplate(id),
     onSuccess: () => {
       toast.success('Template deleted successfully');
-      queryClient.invalidateQueries(['jobTemplates']);
+      queryClient.invalidateQueries({ queryKey: ['jobTemplates'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to delete template');

@@ -36,45 +36,37 @@ const ReviewCard = ({
   const isReviewee = review.reviewee.clerkId === user?.id;
 
   // Mutations
-  const markHelpfulMutation = useMutation(
-    ({ reviewId, isHelpful }) => apiService.reviews.markReviewHelpful(reviewId, isHelpful),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['reviews', review.reviewee.clerkId]);
-      }
+  const markHelpfulMutation = useMutation({
+    mutationFn: ({ reviewId, isHelpful }) => apiService.reviews.markReviewHelpful(reviewId, isHelpful),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', review.reviewee.clerkId] });
     }
-  );
+  });
 
-  const flagReviewMutation = useMutation(
-    ({ reviewId, reason }) => apiService.reviews.flagReview(reviewId, reason),
-    {
-      onSuccess: () => {
-        toast.success('Review flagged successfully');
-      }
+  const flagReviewMutation = useMutation({
+    mutationFn: ({ reviewId, reason }) => apiService.reviews.flagReview(reviewId, reason),
+    onSuccess: () => {
+      toast.success('Review flagged successfully');
     }
-  );
+  });
 
-  const respondToReviewMutation = useMutation(
-    ({ reviewId, content }) => apiService.reviews.respondToReview(reviewId, content),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['reviews', review.reviewee.clerkId]);
-        setShowResponseForm(false);
-        setResponseContent('');
-        toast.success('Response added successfully');
-      }
+  const respondToReviewMutation = useMutation({
+    mutationFn: ({ reviewId, content }) => apiService.reviews.respondToReview(reviewId, content),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', review.reviewee.clerkId] });
+      setShowResponseForm(false);
+      setResponseContent('');
+      toast.success('Response added successfully');
     }
-  );
+  });
 
-  const deleteReviewMutation = useMutation(
-    (reviewId) => apiService.reviews.deleteReview(reviewId),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['reviews', review.reviewee.clerkId]);
-        toast.success('Review deleted successfully');
-      }
+  const deleteReviewMutation = useMutation({
+    mutationFn: (reviewId) => apiService.reviews.deleteReview(reviewId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews', review.reviewee.clerkId] });
+      toast.success('Review deleted successfully');
     }
-  );
+  });
 
   // Handlers
   const handleMarkHelpful = (isHelpful) => {

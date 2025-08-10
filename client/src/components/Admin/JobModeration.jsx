@@ -29,27 +29,23 @@ const JobModeration = () => {
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useQuery(
-    ['adminJobs', filters],
-    () => apiService.admin.getJobsForModeration(filters),
-    {
-      keepPreviousData: true,
-      staleTime: 30000
-    }
-  );
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['adminJobs', filters],
+    queryFn: () => apiService.admin.getJobsForModeration(filters),
+    placeholderData: (prev) => prev,
+    staleTime: 30000
+  });
 
-  const updateJobMutation = useMutation(
-    ({ jobId, data }) => apiService.admin.updateJobStatus(jobId, data),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['adminJobs']);
-        toast.success('Job status updated successfully');
-      },
-      onError: (error) => {
-        toast.error(error.response?.data?.error || 'Failed to update job status');
-      }
+  const updateJobMutation = useMutation({
+    mutationFn: ({ jobId, data }) => apiService.admin.updateJobStatus(jobId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminJobs'] });
+      toast.success('Job status updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to update job status');
     }
-  );
+  });
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({

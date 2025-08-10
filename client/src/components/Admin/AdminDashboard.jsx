@@ -16,14 +16,12 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import EmptyState from '../UI/EmptyState';
 
 const AdminDashboard = () => {
-  const { data: stats, isLoading, error } = useQuery(
-    'adminDashboard',
-    () => apiService.admin.getDashboardStats(),
-    {
-      refetchInterval: 30000, // Refetch every 30 seconds
-      staleTime: 10000, // Consider data stale after 10 seconds
-    }
-  );
+  const { data: stats, isLoading, error } = useQuery({
+    queryKey: ['adminDashboard'],
+    queryFn: () => apiService.admin.getDashboardStats(),
+    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 10000, // Consider data stale after 10 seconds
+  });
 
   if (isLoading) {
     return (

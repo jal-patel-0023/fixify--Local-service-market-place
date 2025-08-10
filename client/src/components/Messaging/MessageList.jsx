@@ -22,46 +22,38 @@ const MessageList = ({
   const [typingTimeout, setTypingTimeout] = React.useState(null);
 
   // Get messages for this conversation
-  const { data: messages, isLoading, error } = useQuery(
-    ['messages', conversationId],
-    () => apiService.messages.getMessages(conversationId),
-    {
-      enabled: !!conversationId,
-      refetchInterval: 10000, // Refetch every 10 seconds
-      staleTime: 5000, // Consider data stale after 5 seconds
-    }
-  );
+  const { data: messages, isLoading, error } = useQuery({
+    queryKey: ['messages', conversationId],
+    queryFn: () => apiService.messages.getMessages(conversationId),
+    enabled: !!conversationId,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    staleTime: 5000, // Consider data stale after 5 seconds
+  });
 
   // Mark messages as read mutation
-  const markAsReadMutation = useMutation(
-    () => apiService.messages.markAsRead(conversationId),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('conversations');
-      }
+  const markAsReadMutation = useMutation({
+    mutationFn: () => apiService.messages.markAsRead(conversationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     }
-  );
+  });
 
   // Send message mutation
-  const sendMessageMutation = useMutation(
-    (messageData) => apiService.messages.sendMessage(messageData),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['messages', conversationId]);
-        queryClient.invalidateQueries('conversations');
-      }
+  const sendMessageMutation = useMutation({
+    mutationFn: (messageData) => apiService.messages.sendMessage(messageData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
     }
-  );
+  });
 
   // Delete message mutation
-  const deleteMessageMutation = useMutation(
-    (messageId) => apiService.messages.deleteMessage(messageId),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['messages', conversationId]);
-      }
+  const deleteMessageMutation = useMutation({
+    mutationFn: (messageId) => apiService.messages.deleteMessage(messageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
     }
-  );
+  });
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -85,8 +77,8 @@ const MessageList = ({
     // Listen for new messages
     socketService.onNewMessage((data) => {
       if (data.conversationId === conversationId) {
-        queryClient.invalidateQueries(['messages', conversationId]);
-        queryClient.invalidateQueries('conversations');
+        queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
       }
     });
 

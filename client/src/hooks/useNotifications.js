@@ -25,8 +25,8 @@ export const useNotifications = () => {
   const markReadMutation = useMutation({
     mutationFn: (id) => api.auth.markNotificationRead(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notifications']);
-      queryClient.invalidateQueries(['notification-count']);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notification-count'] });
     }
   });
 
@@ -34,8 +34,8 @@ export const useNotifications = () => {
   const markAllReadMutation = useMutation({
     mutationFn: () => api.auth.markAllNotificationsRead(),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notifications']);
-      queryClient.invalidateQueries(['notification-count']);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notification-count'] });
       toast.success('All notifications marked as read');
     }
   });
@@ -44,8 +44,8 @@ export const useNotifications = () => {
   const deleteNotificationMutation = useMutation({
     mutationFn: (id) => api.auth.deleteNotification(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['notifications']);
-      queryClient.invalidateQueries(['notification-count']);
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notification-count'] });
       toast.success('Notification deleted');
     }
   });

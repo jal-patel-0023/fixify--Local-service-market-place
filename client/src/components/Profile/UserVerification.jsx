@@ -33,7 +33,7 @@ const UserVerification = ({ user, onUpdate }) => {
     mutationFn: (data) => api.auth.submitVerification(data),
     onSuccess: () => {
       toast.success('Verification submitted successfully');
-      queryClient.invalidateQueries(['user', 'profile']);
+      queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
       setShowUploadModal(false);
       onUpdate?.();
     },

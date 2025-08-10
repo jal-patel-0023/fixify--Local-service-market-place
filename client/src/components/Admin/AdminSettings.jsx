@@ -40,7 +40,7 @@ const AdminSettings = () => {
     mutationFn: (data) => api.admin.updateSettings(data),
     onSuccess: () => {
       toast.success('Settings updated successfully');
-      queryClient.invalidateQueries(['admin', 'settings']);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to update settings');

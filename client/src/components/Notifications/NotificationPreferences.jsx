@@ -48,7 +48,7 @@ const NotificationPreferences = () => {
     mutationFn: (data) => api.auth.updateNotificationPreferences(data),
     onSuccess: () => {
       toast.success('Notification preferences updated successfully');
-      queryClient.invalidateQueries(['notification-preferences']);
+      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to update preferences');

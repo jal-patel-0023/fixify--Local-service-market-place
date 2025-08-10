@@ -29,27 +29,23 @@ const UserManagement = () => {
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useQuery(
-    ['adminUsers', filters],
-    () => apiService.admin.getUsers(filters),
-    {
-      keepPreviousData: true,
-      staleTime: 30000
-    }
-  );
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['adminUsers', filters],
+    queryFn: () => apiService.admin.getUsers(filters),
+    placeholderData: (prev) => prev,
+    staleTime: 30000
+  });
 
-  const updateUserMutation = useMutation(
-    ({ userId, data }) => apiService.admin.updateUserStatus(userId, data),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['adminUsers']);
-        toast.success('User updated successfully');
-      },
-      onError: (error) => {
-        toast.error(error.response?.data?.error || 'Failed to update user');
-      }
+  const updateUserMutation = useMutation({
+    mutationFn: ({ userId, data }) => apiService.admin.updateUserStatus(userId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      toast.success('User updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to update user');
     }
-  );
+  });
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({

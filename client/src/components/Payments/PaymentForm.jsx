@@ -43,8 +43,8 @@ const PaymentFormContent = ({ job, onSuccess }) => {
     mutationFn: (data) => api.payments.confirmPayment(data.paymentId, data),
     onSuccess: () => {
       toast.success('Payment completed successfully!');
-      queryClient.invalidateQueries(['jobs']);
-      queryClient.invalidateQueries(['payments']);
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
       onSuccess();
     },
     onError: (error) => {
