@@ -186,7 +186,7 @@ paymentSchema.methods.refund = function(reason) {
   return this.save();
 };
 
-paymentSchema.methods.dispute = function(reason, description) {
+paymentSchema.methods.createDispute = function(reason, description) {
   this.dispute.isDisputed = true;
   this.dispute.reason = reason;
   this.dispute.description = description;

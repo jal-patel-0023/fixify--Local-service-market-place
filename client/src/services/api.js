@@ -397,4 +397,4 @@ export const apiUtils = {
 };
 
 export default api;
-export { api, apiService, uploadService, geocodingService, storageService, cacheService, apiUtils }; 
+export { api }; 
