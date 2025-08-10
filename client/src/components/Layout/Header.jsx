@@ -78,7 +78,7 @@ const Header = () => {
               <UserButton />
             </SignedIn>
             <SignedOut>
-              <Link to="/auth">
+              <Link to="/auth?mode=sign-in">
                 <Button variant="primary" size="sm">
                   Sign In
                 </Button>

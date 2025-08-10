@@ -23,7 +23,7 @@ const HomePage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <SignedOut>
                 <Link
-                  to="/auth"
+                  to="/auth?mode=sign-up"
                   className="btn btn-lg bg-white text-primary-600 hover:bg-primary-50"
                 >
                   Get Started
@@ -156,7 +156,7 @@ const HomePage = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <SignedOut>
               <Link
-                to="/auth"
+                to="/auth?mode=sign-up"
                 className="btn btn-lg btn-primary"
               >
                 Sign Up Now
