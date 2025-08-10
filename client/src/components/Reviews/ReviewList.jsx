@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Star, Filter, MessageCircle } from 'lucide-react';
 import { apiService } from '../../services/api';
 import ReviewCard from './ReviewCard';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Star, TrendingUp, TrendingDown } from 'lucide-react';
 import { apiService } from '../../services/api';
 import Card from '../UI/Card';

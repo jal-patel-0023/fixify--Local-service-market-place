@@ -1,5 +1,5 @@
 import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
 import { storageService, storageKeys } from '../utils/config';
 
