@@ -8,6 +8,11 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Semantic tokens used across index.css and components
+        border: '#e5e7eb',
+        background: '#ffffff',
+        foreground: '#0f172a',
+        ring: '#2563eb',
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',
