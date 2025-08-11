@@ -1,0 +1,187 @@
+FIXIFY PROJECT - COMPLETE DIRECTORY TREE
+==========================================
+
+fixify/
+├── .git/                           # Git repository (contents not fully explored due to timeout)
+├── client/                         # Frontend React application
+│   ├── src/                        # Source code
+│   │   ├── main.jsx               # Main entry point
+│   │   ├── App.jsx                # Main App component
+│   │   ├── index.css              # Global styles
+│   │   ├── App.css                # App-specific styles
+│   │   ├── services/              # API and external services
+│   │   │   ├── api.js             # API service functions
+│   │   │   └── socket.js          # WebSocket service
+│   │   ├── pages/                 # Page components
+│   │   │   ├── HomePage.jsx       # Home page
+│   │   │   ├── AuthPage.jsx       # Authentication page
+│   │   │   ├── DashboardPage.jsx  # User dashboard
+│   │   │   ├── PostJobPage.jsx    # Job posting page
+│   │   │   ├── ProfilePage.jsx    # User profile page
+│   │   │   ├── JobDetailPage.jsx  # Job details page
+│   │   │   ├── BrowsePage.jsx     # Job browsing page
+│   │   │   ├── NotFoundPage.jsx   # 404 page
+│   │   │   └── Admin/             # Admin pages
+│   │   │       ├── AdminPage.jsx          # Main admin page
+│   │   │       ├── AdminJobsPage.jsx      # Admin jobs management
+│   │   │       ├── AdminSettingsPage.jsx  # Admin settings
+│   │   │       ├── AdminAnalyticsPage.jsx # Admin analytics
+│   │   │       ├── AdminReviewsPage.jsx   # Admin reviews management
+│   │   │       └── AdminUsersPage.jsx     # Admin user management
+│   │   ├── components/            # Reusable components
+│   │   │   ├── Debug/             # Debug components
+│   │   │   │   └── (empty)
+│   │   │   ├── Mobile/            # Mobile-specific components
+│   │   │   │   ├── index.js       # Mobile components index
+│   │   │   │   ├── MobileJobCard.jsx      # Mobile job card
+│   │   │   │   └── MobileNavigation.jsx   # Mobile navigation
+│   │   │   ├── Search/            # Search components
+│   │   │   │   ├── index.js       # Search components index
+│   │   │   │   └── AdvancedSearch.jsx     # Advanced search functionality
+│   │   │   ├── Payments/          # Payment components
+│   │   │   │   ├── index.js       # Payment components index
+│   │   │   │   ├── PaymentForm.jsx        # Payment form
+│   │   │   │   └── PaymentHistory.jsx     # Payment history
+│   │   │   ├── Notifications/     # Notification components
+│   │   │   │   ├── index.js       # Notification components index
+│   │   │   │   ├── NotificationCenter.jsx # Notification center
+│   │   │   │   ├── NotificationPreferences.jsx # Notification preferences
+│   │   │   │   ├── NotificationToast.jsx  # Notification toast
+│   │   │   │   └── NotificationBell.jsx   # Notification bell
+│   │   │   ├── Profile/           # Profile components
+│   │   │   │   ├── index.js       # Profile components index
+│   │   │   │   ├── AvailabilityManager.jsx # Availability management
+│   │   │   │   ├── UserVerification.jsx   # User verification
+│   │   │   │   ├── EnhancedUserProfile.jsx # Enhanced user profile
+│   │   │   │   ├── SkillEndorsements.jsx  # Skill endorsements
+│   │   │   │   └── ProfileCard.jsx        # Profile card
+│   │   │   ├── Jobs/              # Job-related components
+│   │   │   │   ├── index.js       # Job components index
+│   │   │   │   ├── JobTemplate.jsx        # Job template
+│   │   │   │   ├── EnhancedJobForm.jsx   # Enhanced job form
+│   │   │   │   ├── JobScheduler.jsx      # Job scheduler
+│   │   │   │   ├── JobForm.jsx           # Job form
+│   │   │   │   └── JobCard.jsx           # Job card
+│   │   │   ├── Admin/             # Admin components
+│   │   │   │   ├── index.js       # Admin components index
+│   │   │   │   ├── JobModeration.jsx     # Job moderation
+│   │   │   │   ├── UserManagement.jsx    # User management
+│   │   │   │   ├── AdminDashboard.jsx    # Admin dashboard
+│   │   │   │   ├── AdminSettings.jsx     # Admin settings
+│   │   │   │   ├── ReviewModeration.jsx  # Review moderation
+│   │   │   │   ├── AnalyticsDashboard.jsx # Analytics dashboard
+│   │   │   │   └── AdminLayout.jsx       # Admin layout
+│   │   │   ├── Reviews/           # Review components
+│   │   │   │   ├── index.js       # Review components index
+│   │   │   │   ├── ReviewCard.jsx        # Review card
+│   │   │   │   ├── ReviewForm.jsx        # Review form
+│   │   │   │   ├── ReviewStats.jsx       # Review statistics
+│   │   │   │   └── ReviewList.jsx        # Review list
+│   │   │   ├── Messaging/         # Messaging components
+│   │   │   │   ├── index.js       # Messaging components index
+│   │   │   │   ├── ConversationList.jsx  # Conversation list
+│   │   │   │   ├── MessageList.jsx       # Message list
+│   │   │   │   └── MessagingPage.jsx     # Messaging page
+│   │   │   ├── Map/               # Map components
+│   │   │   │   ├── index.js       # Map components index
+│   │   │   │   ├── JobsMap.jsx           # Jobs map
+│   │   │   │   ├── LocationPicker.jsx    # Location picker
+│   │   │   │   └── Map.jsx               # Map component
+│   │   │   ├── UI/                # UI components
+│   │   │   │   ├── index.js       # UI components index
+│   │   │   │   ├── EmptyState.jsx        # Empty state
+│   │   │   │   ├── StatsCard.jsx         # Stats card
+│   │   │   │   ├── LoadingSpinner.jsx    # Loading spinner
+│   │   │   │   ├── Modal.jsx             # Modal component
+│   │   │   │   ├── Badge.jsx             # Badge component
+│   │   │   │   ├── Card.jsx              # Card component
+│   │   │   │   ├── Input.jsx             # Input component
+│   │   │   │   ├── Button.jsx            # Button component
+│   │   │   │   ├── Pagination.jsx        # Pagination component
+│   │   │   │   ├── FilterPanel.jsx       # Filter panel
+│   │   │   │   ├── SearchBar.jsx         # Search bar
+│   │   │   │   └── ErrorFallback.jsx     # Error fallback
+│   │   │   ├── Layout/            # Layout components
+│   │   │   │   ├── Header.jsx            # Header component
+│   │   │   │   ├── Footer.jsx            # Footer component
+│   │   │   │   └── Layout.jsx            # Layout wrapper
+│   │   │   └── Providers/         # Context providers
+│   │   │       └── ThemeProvider.jsx     # Theme provider
+│   │   ├── hooks/                 # Custom React hooks
+│   │   │   ├── useNotifications.js      # Notifications hook
+│   │   │   ├── useAuth.js               # Authentication hook
+│   │   │   ├── useMobile.js             # Mobile detection hook
+│   │   │   └── useLocation.js           # Location hook
+│   │   ├── utils/                 # Utility functions
+│   │   │   ├── config.js                # Configuration utilities
+│   │   │   └── mapUtils.js              # Map utilities
+│   │   └── assets/                # Static assets
+│   │       └── react.svg               # React logo
+│   ├── public/                    # Public assets
+│   │   ├── manifest.json          # PWA manifest
+│   │   └── vite.svg               # Vite logo
+│   ├── package.json               # Frontend dependencies
+│   ├── index.html                 # HTML entry point
+│   ├── tailwind.config.js         # Tailwind CSS configuration
+│   ├── env.example                # Environment variables example
+│   ├── vite.config.js             # Vite build configuration
+│   ├── README.md                  # Frontend documentation
+│   ├── postcss.config.js          # PostCSS configuration
+│   ├── .gitignore                 # Git ignore file
+│   └── eslint.config.js           # ESLint configuration
+├── server/                        # Backend Node.js/Express application
+│   ├── routes/                    # API route definitions
+│   │   ├── search.js              # Search routes
+│   │   ├── payments.js            # Payment routes
+│   │   ├── index.js               # Main routes index
+│   │   ├── admin.js               # Admin routes
+│   │   ├── reviews.js             # Review routes
+│   │   ├── messages.js            # Message routes
+│   │   ├── browse.js              # Browse routes
+│   │   ├── jobs.js                # Job routes
+│   │   └── auth.js                # Authentication routes
+│   ├── controllers/               # Route controllers
+│   │   ├── searchController.js    # Search controller
+│   │   ├── paymentController.js   # Payment controller
+│   │   ├── index.js               # Controllers index
+│   │   ├── adminController.js     # Admin controller
+│   │   ├── reviewController.js    # Review controller
+│   │   ├── messageController.js   # Message controller
+│   │   ├── browseController.js    # Browse controller
+│   │   ├── jobController.js       # Job controller
+│   │   └── authController.js      # Authentication controller
+│   ├── models/                    # Database models
+│   │   ├── Payment.js             # Payment model
+│   │   ├── index.js               # Models index
+│   │   ├── User.js                # User model
+│   │   ├── Review.js              # Review model
+│   │   ├── Job.js                 # Job model
+│   │   ├── Notification.js        # Notification model
+│   │   └── Message.js             # Message model
+│   ├── middleware/                # Express middleware
+│   │   ├── admin.js               # Admin middleware
+│   │   ├── auth.js                # Authentication middleware
+│   │   └── index.js               # Middleware index
+│   ├── utils/                     # Utility functions
+│   │   ├── index.js               # Utils index
+│   │   ├── clerk.js               # Clerk authentication utilities
+│   │   ├── validation.js          # Validation utilities
+│   │   └── database.js            # Database utilities
+│   ├── server.js                  # Main server file
+│   ├── package.json               # Backend dependencies
+│   ├── env.example                # Environment variables example
+│   ├── .gitignore                 # Git ignore file
+│   └── README.md                  # Backend documentation
+└── README.md                      # Project documentation
+
+TOTAL FILES: 89
+TOTAL DIRECTORIES: 25
+
+NOTES:
+- This is a full-stack web application with React frontend and Node.js/Express backend
+- The project appears to be a job marketplace/service platform called "Fixify"
+- Frontend uses Vite, React, and Tailwind CSS
+- Backend uses Express.js with MongoDB models
+- Includes comprehensive admin functionality, user management, job posting, reviews, messaging, and payment systems
+- Mobile-responsive design with dedicated mobile components
+- Uses Clerk for authentication and includes WebSocket support
