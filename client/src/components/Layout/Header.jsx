@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { UserButton, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { UserButton, SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react';
 import { Menu, X, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../Providers/ThemeProvider';
 import { useAuth } from '../../hooks/useAuth';
@@ -78,11 +78,11 @@ const Header = () => {
               <UserButton />
             </SignedIn>
             <SignedOut>
-              <Link to="/auth?mode=sign-in">
+              <SignInButton mode="modal">
                 <Button variant="primary" size="sm">
                   Sign In
                 </Button>
-              </Link>
+              </SignInButton>
             </SignedOut>
 
             {/* Mobile menu button */}

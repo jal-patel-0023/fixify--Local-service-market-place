@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { SignedIn, SignedOut } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignUpButton } from '@clerk/clerk-react';
 import { Search, Users, Clock, Shield, Star, MapPin } from 'lucide-react';
 
 const HomePage = () => {
@@ -22,12 +22,11 @@ const HomePage = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <SignedOut>
-                <Link
-                  to="/auth?mode=sign-up"
-                  className="btn btn-lg bg-white text-primary-600 hover:bg-primary-50"
-                >
-                  Get Started
-                </Link>
+                <SignUpButton mode="modal">
+                  <button className="btn btn-lg bg-white text-primary-600 hover:bg-primary-50">
+                    Get Started
+                  </button>
+                </SignUpButton>
               </SignedOut>
               
               <SignedIn>
@@ -155,12 +154,11 @@ const HomePage = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <SignedOut>
-              <Link
-                to="/auth?mode=sign-up"
-                className="btn btn-lg btn-primary"
-              >
-                Sign Up Now
-              </Link>
+              <SignUpButton mode="modal">
+                <button className="btn btn-lg btn-primary">
+                  Sign Up Now
+                </button>
+              </SignUpButton>
             </SignedOut>
             
             <SignedIn>

@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ClerkProvider, SignedIn, SignedOut, useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { SignedIn, SignedOut } from '@clerk/clerk-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
@@ -33,7 +33,6 @@ import AdminSettingsPage from './pages/AdminSettingsPage';
 import { useAuth } from './hooks/useAuth';
 
 // Utils
-import { clerkPublishableKey } from './utils/config';
 import { registerAuthTokenGetter } from './services/api';
 
 // PWA Service Worker Registration
@@ -179,22 +178,20 @@ function App() {
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <ClerkProvider publishableKey={clerkPublishableKey}>
-            <ThemeProvider>
-              <AppContent />
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: 'var(--toast-bg)',
-                    color: 'var(--toast-color)',
-                    border: '1px solid var(--toast-border)',
-                  },
-                }}
-              />
-            </ThemeProvider>
-          </ClerkProvider>
+          <ThemeProvider>
+            <AppContent />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: 'var(--toast-bg)',
+                  color: 'var(--toast-color)',
+                  border: '1px solid var(--toast-border)',
+                },
+              }}
+            />
+          </ThemeProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>
