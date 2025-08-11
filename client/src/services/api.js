@@ -1,7 +1,12 @@
 import axios from 'axios';
-import { useAuth } from '@clerk/clerk-react';
 import toast from 'react-hot-toast';
 import { config, apiEndpoints } from '../utils/config';
+
+// Auth token getter registration (set from inside React via useAuth)
+let authTokenGetter = null;
+export const registerAuthTokenGetter = (getter) => {
+  authTokenGetter = getter;
+};
 
 // Create axios instance
 const api = axios.create({
@@ -16,8 +21,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      const { getToken } = useAuth();
-      const token = await getToken();
+      const token = authTokenGetter ? await authTokenGetter() : null;
       
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;

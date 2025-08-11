@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ClerkProvider, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { useEffect } from 'react';
+import { ClerkProvider, SignedIn, SignedOut, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
@@ -33,19 +34,21 @@ import { useAuth } from './hooks/useAuth';
 
 // Utils
 import { clerkPublishableKey } from './utils/config';
+import { registerAuthTokenGetter } from './services/api';
 
 // PWA Service Worker Registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('SW registered: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
-      });
-  });
-}
+// Disable SW registration during dev to avoid MIME errors
+// if ('serviceWorker' in navigator) {
+//   window.addEventListener('load', () => {
+//     navigator.serviceWorker.register('/sw.js')
+//       .then((registration) => {
+//         console.log('SW registered: ', registration);
+//       })
+//       .catch((registrationError) => {
+//         console.log('SW registration failed: ', registrationError);
+//       });
+//   });
+// }
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -59,7 +62,11 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-  const { isLoaded } = useAuth();
+  const { isLoaded, getToken } = useAuth();
+  // Register token getter once
+  useEffect(() => {
+    registerAuthTokenGetter(() => getToken());
+  }, [getToken]);
 
   if (!isLoaded) {
     return <LoadingSpinner />;
