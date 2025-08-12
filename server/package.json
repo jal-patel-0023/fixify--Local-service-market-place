@@ -14,7 +14,9 @@
     "migrate:diagnose": "node migrations/diagnose.js",
     "backup": "node migrations/backup.js",
     "backup:list": "node migrations/backup.js --list",
-    "backup:restore": "node migrations/backup.js --restore"
+    "backup:restore": "node migrations/backup.js --restore",
+    "seed": "node scripts/seed-database.js",
+    "seed:force": "node scripts/seed-database.js --force"
   },
   "keywords": [
     "mern",
