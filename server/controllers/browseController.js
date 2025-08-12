@@ -99,7 +99,7 @@ const browseJobs = async (req, res) => {
     if (latitude && longitude && distance) {
       const coordinates = [parseFloat(longitude), parseFloat(latitude)];
       if (validateCoordinates(coordinates)) {
-        filters.location = createNearbyQuery(coordinates, parseFloat(distance));
+        Object.assign(filters, createNearbyQuery(coordinates, parseFloat(distance)));
       }
     }
 
@@ -330,7 +330,7 @@ const getJobsByCategory = async (req, res) => {
     if (latitude && longitude && distance) {
       const coordinates = [parseFloat(longitude), parseFloat(latitude)];
       if (validateCoordinates(coordinates)) {
-        filters.location = createNearbyQuery(coordinates, parseFloat(distance));
+        Object.assign(filters, createNearbyQuery(coordinates, parseFloat(distance)));
       }
     }
 
@@ -458,7 +458,7 @@ const searchJobs = async (req, res) => {
       try {
         const coords = JSON.parse(location);
         if (validateCoordinates(coords)) {
-          filters.location = createNearbyQuery(coords, parseFloat(radius));
+          Object.assign(filters, createNearbyQuery(coords, parseFloat(radius)));
         }
       } catch (error) {
         console.log('Invalid location format');

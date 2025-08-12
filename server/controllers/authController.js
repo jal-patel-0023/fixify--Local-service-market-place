@@ -9,8 +9,7 @@ const { userValidationRules, handleValidationErrors } = require('../utils/valida
 const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
-      .select('-__v')
-      .populate('rating.reviews.reviewer', 'firstName lastName profileImage');
+      .select('-__v');
 
     res.json({
       success: true,

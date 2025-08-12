@@ -229,25 +229,29 @@ userSchema.virtual('locationString').get(function() {
   return 'Location not set';
 });
 
-// Method to calculate average rating
+// Method to calculate average rating (backward-compatible)
 userSchema.methods.calculateAverageRating = function() {
-  if (this.rating.reviews.length === 0) return 0;
-  
-  const totalRating = this.rating.reviews.reduce((sum, review) => sum + review.rating, 0);
+  if (!this.rating || !Array.isArray(this.rating.reviews) || this.rating.reviews.length === 0) {
+    // Fall back to existing average if present, else 0
+    return typeof this.rating?.average === 'number' ? this.rating.average : 0;
+  }
+  const totalRating = this.rating.reviews.reduce((sum, review) => sum + (review?.rating || 0), 0);
   return Math.round((totalRating / this.rating.reviews.length) * 10) / 10;
 };
 
-// Method to add a review
+// Method to add a review (only used if legacy embedded reviews exist)
 userSchema.methods.addReview = function(reviewData) {
+  if (!this.rating) this.rating = {};
+  if (!Array.isArray(this.rating.reviews)) this.rating.reviews = [];
   this.rating.reviews.push(reviewData);
   this.rating.totalReviews = this.rating.reviews.length;
   this.rating.average = this.calculateAverageRating();
   return this.save();
 };
 
-// Pre-save middleware to update average rating
+// Pre-save middleware to update average rating (guarded for legacy path)
 userSchema.pre('save', function(next) {
-  if (this.rating.reviews.length > 0) {
+  if (this.rating && Array.isArray(this.rating.reviews) && this.rating.reviews.length > 0) {
     this.rating.average = this.calculateAverageRating();
   }
   next();

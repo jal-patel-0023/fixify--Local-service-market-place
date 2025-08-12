@@ -1,10 +1,37 @@
 import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiService } from '../services/api';
+import { apiService, registerAuthTokenGetter } from '../services/api';
 import { storageService, storageKeys } from '../utils/config';
 
 export const useAuth = () => {
   const { isLoaded, isSignedIn, userId, sessionId, getToken } = useClerkAuth();
+  const [tokenReady, setTokenReady] = useState(false);
+
+  // Ensure axios has a valid token getter before any API calls
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!isLoaded || !isSignedIn) {
+          if (!cancelled) setTokenReady(false);
+          return;
+        }
+        const token = await getToken();
+        if (!cancelled) {
+          if (token) {
+            registerAuthTokenGetter(() => getToken());
+            setTokenReady(true);
+          } else {
+            setTokenReady(false);
+          }
+        }
+      } catch (e) {
+        if (!cancelled) setTokenReady(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [getToken, isLoaded, isSignedIn]);
   const { user } = useUser();
   
   // Get user profile from our API
@@ -16,7 +43,7 @@ export const useAuth = () => {
   } = useQuery({
     queryKey: ['user', 'profile'],
     queryFn: () => apiService.auth.me(),
-    enabled: isSignedIn && isLoaded,
+    enabled: isSignedIn && isLoaded && tokenReady,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -30,7 +57,7 @@ export const useAuth = () => {
   } = useQuery({
     queryKey: ['user', 'stats'],
     queryFn: () => apiService.auth.getStats(),
-    enabled: isSignedIn && isLoaded,
+    enabled: isSignedIn && isLoaded && tokenReady,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
   });

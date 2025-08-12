@@ -85,7 +85,7 @@ const notificationSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ['navigate', 'open_modal', 'external_link'],
-      default: null
+      required: false
     },
     url: String,
     data: mongoose.Schema.Types.Mixed

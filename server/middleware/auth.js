@@ -1,5 +1,5 @@
 const { User } = require('../models');
-const { createSystemNotification, verifySessionToken, syncUserData } = require('../utils');
+const { createSystemNotification, verifySessionToken, syncUserData, getClerkUser } = require('../utils');
 
 /**
  * Verify Clerk session and get user data
@@ -23,17 +23,6 @@ const verifyClerkSession = async (sessionToken) => {
 const getOrCreateUser = async (clerkData) => {
   try {
     const user = await syncUserData(clerkData.user);
-    
-    // Send welcome notification for new users
-    if (user.createdAt.getTime() === user.updatedAt.getTime()) {
-      await createSystemNotification(
-        user._id,
-        'profile_update',
-        'Welcome to Fixify!',
-        'Your account has been created successfully. Complete your profile to get started.'
-      );
-    }
-    
     return user;
   } catch (error) {
     console.error('Error getting or creating user:', error);
@@ -47,8 +36,17 @@ const getOrCreateUser = async (clerkData) => {
  */
 const authenticateUser = async (req, res, next) => {
   try {
+    // 1) If Clerk SDK middleware attached auth info, prefer that (bypasses manual token verify)
+    if (req.auth && req.auth.userId) {
+      const clerkUser = await getClerkUser(req.auth.userId);
+      const user = await getOrCreateUser({ user: clerkUser });
+      req.user = user;
+      req.clerkData = { user: clerkUser, from: 'clerk-sdk' };
+      return next();
+    }
+
+    // 2) Fallback: Bearer token header
     const authHeader = req.headers.authorization;
-    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         error: 'Authentication required',
@@ -57,17 +55,17 @@ const authenticateUser = async (req, res, next) => {
     }
 
     const sessionToken = authHeader.substring(7);
-    
-    // Verify session with Clerk
+
+    // Verify session with Clerk (supports JWT or session token)
     const clerkData = await verifyClerkSession(sessionToken);
-    
+
     // Get or create user in database
     const user = await getOrCreateUser(clerkData);
-    
+
     // Attach user to request
     req.user = user;
     req.clerkData = clerkData;
-    
+
     next();
   } catch (error) {
     console.error('Authentication error:', error);
@@ -84,17 +82,26 @@ const authenticateUser = async (req, res, next) => {
  */
 const optionalAuth = async (req, res, next) => {
   try {
+    // Prefer Clerk SDK context when available
+    if (req.auth && req.auth.userId) {
+      const clerkUser = await getClerkUser(req.auth.userId);
+      const user = await getOrCreateUser({ user: clerkUser });
+      req.user = user;
+      req.clerkData = { user: clerkUser, from: 'clerk-sdk' };
+      return next();
+    }
+
     const authHeader = req.headers.authorization;
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const sessionToken = authHeader.substring(7);
       const clerkData = await verifyClerkSession(sessionToken);
       const user = await getOrCreateUser(clerkData);
-      
+
       req.user = user;
       req.clerkData = clerkData;
     }
-    
+
     next();
   } catch (error) {
     // Continue without authentication

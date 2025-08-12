@@ -9,6 +9,14 @@ const http = require('http');
 const socketIo = require('socket.io');
 require('dotenv').config();
 
+// Clerk auth (SDK)
+let ClerkExpressWithAuth;
+try {
+  ({ ClerkExpressWithAuth } = require('@clerk/clerk-sdk-node'));
+} catch (e) {
+  ClerkExpressWithAuth = null;
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -28,6 +36,11 @@ app.use(cors({
 app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Attach Clerk auth middleware early if available
+if (ClerkExpressWithAuth) {
+  app.use(ClerkExpressWithAuth());
+}
 
 // Rate limiting
 const limiter = rateLimit({

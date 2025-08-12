@@ -43,12 +43,40 @@ const createNearbyQuery = (coordinates, maxDistanceMiles = 25) => {
 };
 
 /**
- * Create pagination parameters
- * @param {number} page - Page number (1-based)
- * @param {number} limit - Items per page
- * @returns {Object} Pagination parameters
+ * Create paginated query results helper OR return skip/limit
+ * Overloaded:
+ *  - async createPagination(Model, filters, sort, page, limit, populate?) => { data, pagination }
+ *  - createPagination(page, limit) => { skip, limit, page }
  */
-const createPagination = (page = 1, limit = 10) => {
+const createPagination = async (...args) => {
+  // Query helper signature
+  if (args.length >= 5 && typeof args[0] === 'function') {
+    const [Model, filters = {}, sort = {}, page = 1, limit = 10, populate = []] = args;
+    const skip = (page - 1) * limit;
+
+    let query = Model.find(filters).sort(sort).skip(skip).limit(parseInt(limit));
+    if (Array.isArray(populate)) {
+      populate.forEach((p) => { query = query.populate(p); });
+    }
+
+    const [data, total] = await Promise.all([
+      query.exec(),
+      Model.countDocuments(filters)
+    ]);
+
+    return {
+      data,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    };
+  }
+
+  // Simple helper signature
+  const [page = 1, limit = 10] = args;
   const skip = (page - 1) * limit;
   return { skip, limit, page };
 };
@@ -180,12 +208,21 @@ const createSystemNotification = async (recipientId, type, title, message) => {
  * @param {number} longitude - Longitude
  * @returns {boolean} True if coordinates are valid
  */
-const validateCoordinates = (latitude, longitude) => {
+const validateCoordinates = (a, b) => {
+  let lat, lng;
+  if (Array.isArray(a) && a.length === 2) {
+    // Accept [lng, lat]
+    [lng, lat] = a;
+  } else if (typeof a === 'object' && a !== null && 'lat' in a && 'lng' in a) {
+    ({ lat, lng } = a);
+  } else {
+    lat = a; lng = b;
+  }
   return (
-    typeof latitude === 'number' &&
-    typeof longitude === 'number' &&
-    latitude >= -90 && latitude <= 90 &&
-    longitude >= -180 && longitude <= 180
+    typeof lat === 'number' &&
+    typeof lng === 'number' &&
+    lat >= -90 && lat <= 90 &&
+    lng >= -180 && lng <= 180
   );
 };
 
