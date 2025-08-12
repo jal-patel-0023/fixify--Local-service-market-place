@@ -2,7 +2,7 @@ const User = require('../models/User');
 const Job = require('../models/Job');
 const Review = require('../models/Review');
 const Message = require('../models/Message');
-const { createSystemNotification } = require('../utils/database');
+const { createSystemNotification, createJobNotification } = require('../utils/database');
 
 // Get admin dashboard statistics
 const getDashboardStats = async (req, res) => {
@@ -156,13 +156,12 @@ const updateUserStatus = async (req, res) => {
 
     // Create notification for user
     if (isActive === false) {
-      await createSystemNotification({
-        recipient: userId,
-        sender: req.adminUser.clerkId,
-        type: 'admin',
-        title: 'Account Suspended',
-        message: 'Your account has been suspended by an administrator.'
-      });
+      await createSystemNotification(
+        user._id,
+        'system_alert',
+        'Account Suspended',
+        'Your account has been suspended by an administrator.'
+      );
     }
 
     res.json({
@@ -244,14 +243,13 @@ const updateJobStatus = async (req, res) => {
     await job.save();
 
     // Create notification for job creator
-    await createSystemNotification({
-      recipient: job.creator,
-      sender: req.moderatorUser.clerkId,
-      type: 'job_moderation',
-      title: `Job ${status === 'approved' ? 'Approved' : 'Rejected'}`,
-      message: `Your job "${job.title}" has been ${status}.${reason ? ` Reason: ${reason}` : ''}`,
-      relatedJob: jobId
-    });
+    await createJobNotification(
+      job.creator,
+      'job_moderation',
+      jobId,
+      `Job ${status === 'approved' ? 'Approved' : 'Rejected'}`,
+      `Your job "${job.title}" has been ${status}.${reason ? ` Reason: ${reason}` : ''}`
+    );
 
     res.json({
       success: true,
@@ -322,7 +320,7 @@ const updateReviewStatus = async (req, res) => {
     }
 
     review.status = status;
-    review.moderatedBy = req.moderatorUser.clerkId;
+    review.moderatedBy = req.moderatorUser._id;
     review.moderatedAt = new Date();
     if (reason) {
       review.moderationReason = reason;
@@ -331,14 +329,13 @@ const updateReviewStatus = async (req, res) => {
     await review.save();
 
     // Create notification for review author
-    await createSystemNotification({
-      recipient: review.reviewer,
-      sender: req.moderatorUser.clerkId,
-      type: 'review_moderation',
-      title: `Review ${status === 'approved' ? 'Approved' : 'Rejected'}`,
-      message: `Your review has been ${status}.${reason ? ` Reason: ${reason}` : ''}`,
-      relatedJob: review.job
-    });
+    await createJobNotification(
+      review.reviewer,
+      'review_moderation',
+      review.job,
+      `Review ${status === 'approved' ? 'Approved' : 'Rejected'}`,
+      `Your review has been ${status}.${reason ? ` Reason: ${reason}` : ''}`
+    );
 
     res.json({
       success: true,

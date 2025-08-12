@@ -1,6 +1,14 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
 const { handleValidationErrors } = require('../utils/validation');
+const rateLimit = require('express-rate-limit');
+
+// Rate limit: max 10 review actions per 15 minutes per IP
+const reviewLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+});
+
 const { authenticateUser } = require('../middleware/auth');
 const {
   createReview,
@@ -20,7 +28,7 @@ const router = express.Router();
 router.use(authenticateUser);
 
 // Create a new review
-router.post('/', [
+router.post('/', reviewLimiter, [
   body('jobId').isMongoId().withMessage('Invalid job ID'),
   body('revieweeId').notEmpty().withMessage('Reviewee ID is required'),
   body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
@@ -53,7 +61,7 @@ router.get('/user/:userId/stats', [
 ], getUserReviewStats);
 
 // Update a review
-router.put('/:reviewId', [
+router.put('/:reviewId', reviewLimiter, [
   param('reviewId').isMongoId().withMessage('Invalid review ID'),
   body('rating').optional().isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
   body('title').optional().isLength({ min: 1, max: 100 }).withMessage('Title must be between 1 and 100 characters'),
@@ -63,27 +71,27 @@ router.put('/:reviewId', [
 ], updateReview);
 
 // Delete a review
-router.delete('/:reviewId', [
+router.delete('/:reviewId', reviewLimiter, [
   param('reviewId').isMongoId().withMessage('Invalid review ID'),
   handleValidationErrors
 ], deleteReview);
 
 // Mark review as helpful
-router.post('/:reviewId/helpful', [
+router.post('/:reviewId/helpful', reviewLimiter, [
   param('reviewId').isMongoId().withMessage('Invalid review ID'),
   body('isHelpful').isBoolean().withMessage('isHelpful must be a boolean'),
   handleValidationErrors
 ], markReviewHelpful);
 
 // Flag a review
-router.post('/:reviewId/flag', [
+router.post('/:reviewId/flag', reviewLimiter, [
   param('reviewId').isMongoId().withMessage('Invalid review ID'),
   body('reason').isIn(['inappropriate', 'spam', 'fake', 'other']).withMessage('Invalid flag reason'),
   handleValidationErrors
 ], flagReview);
 
 // Respond to a review
-router.post('/:reviewId/respond', [
+router.post('/:reviewId/respond', reviewLimiter, [
   param('reviewId').isMongoId().withMessage('Invalid review ID'),
   body('content').notEmpty().withMessage('Response content is required')
     .isLength({ min: 1, max: 1000 }).withMessage('Response must be between 1 and 1000 characters'),
@@ -98,4 +106,4 @@ router.get('/job/:jobId', [
   handleValidationErrors
 ], getJobReviews);
 
-module.exports = router; 
+module.exports = router;

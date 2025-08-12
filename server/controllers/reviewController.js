@@ -1,13 +1,16 @@
+const mongoose = require('mongoose');
 const Review = require('../models/Review');
 const User = require('../models/User');
 const Job = require('../models/Job');
-const { createSystemNotification } = require('../utils/database');
+const { createJobNotification } = require('../utils/database');
+
+
 
 // Create a new review
 const createReview = async (req, res) => {
   try {
     const { jobId, revieweeId, rating, title, content, categories } = req.body;
-    const reviewerId = req.user.clerkId;
+    const reviewerId = req.user._id;
 
     // Validate job exists and is completed
     const job = await Job.findById(jobId);
@@ -26,7 +29,7 @@ const createReview = async (req, res) => {
     }
 
     // Check if user is part of this job
-    if (job.creator !== reviewerId && job.assignedTo !== reviewerId) {
+    if (job.creator?.toString() !== reviewerId.toString() && job.assignedTo?.toString() !== reviewerId.toString()) {
       return res.status(403).json({
         success: false,
         error: 'You can only review jobs you were involved in'
@@ -34,7 +37,23 @@ const createReview = async (req, res) => {
     }
 
     // Check if user is reviewing themselves
-    if (reviewerId === revieweeId) {
+    // Resolve reviewee (accepts either Mongo ObjectId or Clerk ID)
+    let reviewee;
+    if (mongoose.isValidObjectId(revieweeId)) {
+      reviewee = await User.findById(revieweeId);
+    }
+    if (!reviewee) {
+      reviewee = await User.findOne({ clerkId: revieweeId });
+    }
+
+    if (!reviewee) {
+      return res.status(404).json({
+        success: false,
+        error: 'User being reviewed not found'
+      });
+    }
+
+    if (reviewerId.toString() === reviewee._id.toString()) {
       return res.status(400).json({
         success: false,
         error: 'You cannot review yourself'
@@ -54,19 +73,10 @@ const createReview = async (req, res) => {
       });
     }
 
-    // Validate reviewee exists
-    const reviewee = await User.findOne({ clerkId: revieweeId });
-    if (!reviewee) {
-      return res.status(404).json({
-        success: false,
-        error: 'User being reviewed not found'
-      });
-    }
-
     // Create review
     const review = new Review({
       reviewer: reviewerId,
-      reviewee: revieweeId,
+      reviewee: reviewee._id,
       job: jobId,
       rating,
       title,
@@ -83,21 +93,14 @@ const createReview = async (req, res) => {
     await review.save();
 
     // Populate reviewer and reviewee info
-    await review.populate('reviewer', 'clerkId firstName lastName profileImage');
-    await review.populate('reviewee', 'clerkId firstName lastName profileImage');
+    await review.populate('reviewer', 'firstName lastName profileImage clerkId');
+    await review.populate('reviewee', 'firstName lastName profileImage clerkId');
 
     // Update user rating statistics
-    await updateUserRatingStats(revieweeId);
+    await updateUserRatingStats(reviewee._id);
 
     // Create notification for reviewee
-    await createSystemNotification({
-      recipient: revieweeId,
-      sender: reviewerId,
-      type: 'review',
-      title: 'New Review Received',
-      message: `You received a ${rating}-star review for your work on "${job.title}"`,
-      relatedJob: jobId
-    });
+    await createJobNotification(reviewee._id, 'review_received', jobId, 'New Review Received', `You received a ${rating}-star review for your work on "${job.title}"`);
 
     res.status(201).json({
       success: true,
@@ -120,13 +123,13 @@ const getUserReviews = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    const query = { reviewee: userId };
+    const query = { reviewee: mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : userId };
     if (status !== 'all') {
       query.status = status;
     }
 
     const reviews = await Review.find(query)
-      .populate('reviewer', 'clerkId firstName lastName profileImage')
+      .populate('reviewer', 'firstName lastName profileImage clerkId')
       .populate('job', 'title category')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -184,7 +187,7 @@ const updateReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
     const { rating, title, content, categories } = req.body;
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     const review = await Review.findById(reviewId);
     if (!review) {
@@ -195,7 +198,7 @@ const updateReview = async (req, res) => {
     }
 
     // Only reviewer can update their review
-    if (review.reviewer !== userId) {
+    if (review.reviewer?.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to update this review'
@@ -230,7 +233,7 @@ const updateReview = async (req, res) => {
 const deleteReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     const review = await Review.findById(reviewId);
     if (!review) {
@@ -241,7 +244,7 @@ const deleteReview = async (req, res) => {
     }
 
     // Only reviewer can delete their review
-    if (review.reviewer !== userId) {
+    if (review.reviewer?.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to delete this review'
@@ -271,7 +274,7 @@ const markReviewHelpful = async (req, res) => {
   try {
     const { reviewId } = req.params;
     const { isHelpful } = req.body;
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     const review = await Review.findById(reviewId);
     if (!review) {
@@ -281,7 +284,7 @@ const markReviewHelpful = async (req, res) => {
       });
     }
 
-    await review.markHelpful(userId, isHelpful);
+    await review.markHelpful(userId.toString(), isHelpful);
 
     res.json({
       success: true,
@@ -304,7 +307,7 @@ const flagReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
     const { reason } = req.body;
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     const review = await Review.findById(reviewId);
     if (!review) {
@@ -314,7 +317,7 @@ const flagReview = async (req, res) => {
       });
     }
 
-    await review.flagReview(userId, reason);
+    await review.flagReview(userId.toString(), reason);
 
     res.json({
       success: true,
@@ -334,7 +337,7 @@ const respondToReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
     const { content } = req.body;
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     const review = await Review.findById(reviewId);
     if (!review) {
@@ -345,7 +348,7 @@ const respondToReview = async (req, res) => {
     }
 
     // Only the reviewed user can respond
-    if (review.reviewee !== userId) {
+    if (review.reviewee?.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to respond to this review'
@@ -376,8 +379,8 @@ const getJobReviews = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const reviews = await Review.find({ job: jobId, status: 'approved' })
-      .populate('reviewer', 'clerkId firstName lastName profileImage')
-      .populate('reviewee', 'clerkId firstName lastName profileImage')
+      .populate('reviewer', 'firstName lastName profileImage clerkId')
+      .populate('reviewee', 'firstName lastName profileImage clerkId')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -407,12 +410,12 @@ const getJobReviews = async (req, res) => {
 const updateUserRatingStats = async (userId) => {
   try {
     const [averageRating, categoryAverages] = await Promise.all([
-      Review.getAverageRating(userId),
-      Review.getCategoryAverages(userId)
+      Review.getAverageRating(userId.toString()),
+      Review.getCategoryAverages(userId.toString())
     ]);
 
-    await User.findOneAndUpdate(
-      { clerkId: userId },
+    await User.findByIdAndUpdate(
+      userId,
       {
         'rating.average': averageRating.averageRating,
         'rating.totalReviews': averageRating.totalReviews,
@@ -435,4 +438,4 @@ module.exports = {
   flagReview,
   respondToReview,
   getJobReviews
-}; 
+};

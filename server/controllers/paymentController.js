@@ -16,7 +16,7 @@ const paymentValidation = [
 const createPaymentIntent = async (req, res) => {
   try {
     const { jobId, amount, currency = 'usd' } = req.body;
-    const clientId = req.user.id;
+    const clientId = req.user._id.toString();
 
     // Get job details
     const job = await Job.findById(jobId).populate('creator');
@@ -24,7 +24,7 @@ const createPaymentIntent = async (req, res) => {
       return res.status(404).json({ message: 'Job not found' });
     }
 
-    if (job.creator.clerkId !== clientId) {
+    if (job.creator._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'You can only pay for your own jobs' });
     }
 
@@ -62,7 +62,7 @@ const createPaymentIntent = async (req, res) => {
         paymentId: payment.paymentId,
         jobId: jobId,
         clientId: clientId,
-        helperId: job.assignedTo
+        helperId: job.assignedTo?.toString()
       },
       automatic_payment_methods: {
         enabled: true,
@@ -127,7 +127,7 @@ const confirmPayment = async (req, res) => {
 const getPaymentDetails = async (req, res) => {
   try {
     const { paymentId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id.toString();
 
     const payment = await Payment.findOne({ paymentId })
       .populate('job')
@@ -152,7 +152,7 @@ const getPaymentDetails = async (req, res) => {
 
 const getUserPayments = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id.toString();
     const { status, page = 1, limit = 10 } = req.query;
 
     const query = {
@@ -188,7 +188,7 @@ const getUserPayments = async (req, res) => {
 
 const getPaymentStats = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id.toString();
     const { role = 'all' } = req.query;
 
     const stats = await Payment.getPaymentStats(userId, role);
@@ -203,7 +203,7 @@ const getPaymentStats = async (req, res) => {
 const releaseEscrow = async (req, res) => {
   try {
     const { paymentId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id.toString();
 
     const payment = await Payment.findOne({ paymentId }).populate('job');
     if (!payment) {
@@ -223,7 +223,7 @@ const releaseEscrow = async (req, res) => {
     const transfer = await stripe.transfers.create({
       amount: payment.helperAmount,
       currency: payment.currency,
-      destination: payment.helper.stripeAccountId, // Helper's connected account
+      destination: (await User.findById(payment.helper))?.stripe?.accountId, // Helper's connected account
       metadata: {
         paymentId: payment.paymentId,
         jobId: payment.job._id.toString()
@@ -254,7 +254,7 @@ const createDispute = async (req, res) => {
   try {
     const { paymentId } = req.params;
     const { reason, description } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id.toString();
 
     const payment = await Payment.findOne({ paymentId });
     if (!payment) {
@@ -289,7 +289,7 @@ const resolveDispute = async (req, res) => {
   try {
     const { paymentId } = req.params;
     const { resolution } = req.body;
-    const adminId = req.user.id;
+    const adminId = req.user._id.toString();
 
     const payment = await Payment.findOne({ paymentId });
     if (!payment) {
@@ -319,7 +319,7 @@ const resolveDispute = async (req, res) => {
         await stripe.transfers.create({
           amount: payment.helperAmount,
           currency: payment.currency,
-          destination: payment.helper.stripeAccountId
+          destination: (await User.findById(payment.helper))?.stripe?.accountId
         });
         break;
       case 'partial_refund':

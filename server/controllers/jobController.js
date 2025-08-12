@@ -114,8 +114,8 @@ const getJobs = async (req, res) => {
     // Add location-based filtering if coordinates provided
     if (latitude && longitude && distance) {
       const coordinates = [parseFloat(longitude), parseFloat(latitude)];
-      if (validateCoordinates(coordinates)) {
-        filters.location = createNearbyQuery(coordinates, parseFloat(distance));
+      if (validateCoordinates(parseFloat(latitude), parseFloat(longitude))) {
+        Object.assign(filters, createNearbyQuery(coordinates, parseFloat(distance)));
       }
     }
 
@@ -653,17 +653,18 @@ const notifyNearbyHelpers = async (job) => {
     const nearbyHelpers = await User.find({
       accountType: { $in: ['helper', 'both'] },
       isActive: true,
-      location: createNearbyQuery(job.location.coordinates, 50) // 50km radius
-    }).limit(20);
+      ...createNearbyQuery(job.location.coordinates, 50)
+    }).select('_id').limit(50);
 
-    for (const helper of nearbyHelpers) {
-      await createJobNotification(
-        helper._id,
-        job.creator,
-        'job_posted',
-        'New Job Available',
-        `A new ${job.category} job has been posted near you: "${job.title}"`
-      );
+    if (nearbyHelpers.length) {
+      const notifications = nearbyHelpers.map(h => ({
+        recipient: h._id,
+        type: 'job_posted',
+        title: 'New Job Available',
+        message: `A new ${job.category} job has been posted near you: "${job.title}"`,
+        jobId: job._id
+      }));
+      await Notification.insertMany(notifications);
     }
   } catch (error) {
     console.error('Notify nearby helpers error:', error);

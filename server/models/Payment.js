@@ -22,12 +22,14 @@ const paymentSchema = new mongoose.Schema({
     index: true
   },
   client: {
-    type: String, // Clerk user ID
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
     index: true
   },
   helper: {
-    type: String, // Clerk user ID
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
     index: true
   },
@@ -202,11 +204,12 @@ paymentSchema.methods.resolveDispute = function(resolution, resolvedBy) {
 
 // Static methods
 paymentSchema.statics.getPaymentStats = async function(userId, role = 'all') {
-  const matchStage = role === 'all' 
-    ? { $or: [{ client: userId }, { helper: userId }] }
-    : role === 'client' 
-    ? { client: userId }
-    : { helper: userId };
+  const id = mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : userId;
+  const matchStage = role === 'all'
+    ? { $or: [{ client: id }, { helper: id }] }
+    : role === 'client'
+    ? { client: id }
+    : { helper: id };
 
   const stats = await this.aggregate([
     { $match: matchStage },

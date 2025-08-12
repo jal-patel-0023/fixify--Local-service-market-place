@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 const reviewSchema = new mongoose.Schema({
   // Review details
   reviewer: {
-    type: String, // Clerk ID of the reviewer
+    type: mongoose.Schema.Types.ObjectId, // Reference to User
     required: true,
     ref: 'User'
   },
   reviewee: {
-    type: String, // Clerk ID of the person being reviewed
+    type: mongoose.Schema.Types.ObjectId, // Reference to User
     required: true,
     ref: 'User'
   },
@@ -87,7 +87,7 @@ const reviewSchema = new mongoose.Schema({
 
   // Moderation
   moderatedBy: {
-    type: String, // Clerk ID of moderator
+    type: mongoose.Schema.Types.ObjectId, // Moderator (User)
     ref: 'User'
   },
   moderatedAt: Date,
@@ -107,7 +107,7 @@ const reviewSchema = new mongoose.Schema({
 
   // User who found this helpful
   helpfulBy: [{
-    type: String, // Clerk ID
+    type: mongoose.Schema.Types.ObjectId, // Users who marked helpful
     ref: 'User'
   }],
 
@@ -127,7 +127,7 @@ const reviewSchema = new mongoose.Schema({
   // Flags for inappropriate content
   flags: [{
     user: {
-      type: String, // Clerk ID
+      type: mongoose.Schema.Types.ObjectId, // Flagging user
       ref: 'User'
     },
     reason: {
@@ -180,10 +180,11 @@ reviewSchema.pre('save', function(next) {
 
 // Method to calculate average rating for a user
 reviewSchema.statics.getAverageRating = async function(userId) {
+  const id = mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : userId;
   const result = await this.aggregate([
     {
       $match: {
-        reviewee: userId,
+        reviewee: id,
         status: 'approved'
       }
     },
@@ -224,10 +225,11 @@ reviewSchema.statics.getAverageRating = async function(userId) {
 
 // Method to get category averages for a user
 reviewSchema.statics.getCategoryAverages = async function(userId) {
+  const id = mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : userId;
   const result = await this.aggregate([
     {
       $match: {
-        reviewee: userId,
+        reviewee: id,
         status: 'approved'
       }
     },
@@ -265,39 +267,41 @@ reviewSchema.statics.getCategoryAverages = async function(userId) {
 
 // Method to mark review as helpful
 reviewSchema.methods.markHelpful = async function(userId, isHelpful) {
-  const helpfulIndex = this.helpfulBy.indexOf(userId);
-  
+  const userIdStr = userId.toString();
+  const index = this.helpfulBy.findIndex(id => id.toString() === userIdStr);
+
   if (isHelpful) {
-    if (helpfulIndex === -1) {
-      this.helpfulBy.push(userId);
+    if (index === -1) {
+      this.helpfulBy.push(mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : userId);
       this.helpfulVotes.up += 1;
     }
   } else {
-    if (helpfulIndex !== -1) {
-      this.helpfulBy.splice(helpfulIndex, 1);
-      this.helpfulVotes.up -= 1;
+    if (index !== -1) {
+      this.helpfulBy.splice(index, 1);
+      this.helpfulVotes.up = Math.max(0, this.helpfulVotes.up - 1);
     }
   }
-  
+
   return this.save();
 };
 
 // Method to flag review
 reviewSchema.methods.flagReview = async function(userId, reason) {
+  const userIdStr = userId.toString();
   // Check if user already flagged this review
-  const existingFlag = this.flags.find(flag => flag.user === userId);
-  
+  const existingFlag = this.flags.find(flag => flag.user && flag.user.toString() === userIdStr);
+
   if (existingFlag) {
     existingFlag.reason = reason;
     existingFlag.createdAt = new Date();
   } else {
     this.flags.push({
-      user: userId,
+      user: mongoose.isValidObjectId(userId) ? new mongoose.Types.ObjectId(userId) : userId,
       reason,
       createdAt: new Date()
     });
   }
-  
+
   return this.save();
 };
 

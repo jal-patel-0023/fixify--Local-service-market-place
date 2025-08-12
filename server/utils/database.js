@@ -27,15 +27,16 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
  * @param {number} maxDistance - Maximum distance in miles
  * @returns {Object} MongoDB geospatial query
  */
-const createNearbyQuery = (latitude, longitude, maxDistance = 25) => {
+const createNearbyQuery = (coordinates, maxDistanceMiles = 25) => {
+  const [longitude, latitude] = Array.isArray(coordinates) ? coordinates : [coordinates.lng, coordinates.lat];
   return {
-    'location.coordinates': {
+    location: {
       $near: {
         $geometry: {
           type: 'Point',
           coordinates: [longitude, latitude]
         },
-        $maxDistance: maxDistance * 1609.34 // Convert miles to meters
+        $maxDistance: maxDistanceMiles * 1609.34 // miles to meters
       }
     }
   };

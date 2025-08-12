@@ -193,6 +193,13 @@ const userSchema = new mongoose.Schema({
     }
   },
 
+  // Stripe connected account info
+  stripe: {
+    accountId: { type: String, index: true },
+    payoutsEnabled: { type: Boolean, default: false },
+    detailsSubmitted: { type: Boolean, default: false }
+  },
+
   // Saved jobs
   savedJobs: [{
     type: mongoose.Schema.Types.ObjectId,
