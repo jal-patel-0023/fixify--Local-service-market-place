@@ -86,6 +86,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/browse', browseRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/admin', adminRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/search', searchRoutes);

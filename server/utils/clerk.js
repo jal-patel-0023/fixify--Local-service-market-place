@@ -269,10 +269,24 @@ const getUserOrganizations = async (userId) => {
  */
 const syncUserData = async (clerkUser) => {
   try {
+    // First, try to find user by clerkId
     let user = await User.findOne({ clerkId: clerkUser.id });
 
     if (!user) {
-      // Derive safe defaults
+      // If not found by clerkId, check if user exists by email (in case clerkId changed)
+      const primaryEmail = clerkUser.email_addresses?.[0]?.email_address || clerkUser.email;
+      if (primaryEmail) {
+        user = await User.findOne({ email: primaryEmail });
+        if (user) {
+          // Update existing user with new clerkId
+          user.clerkId = clerkUser.id;
+          console.log(`Updated existing user ${user.email} with new clerkId: ${clerkUser.id}`);
+        }
+      }
+    }
+
+    if (!user) {
+      // Derive safe defaults for new user
       const firstName = clerkUser.first_name || clerkUser.given_name || 'User';
       const lastName = clerkUser.last_name || clerkUser.family_name || 'Name';
       const primaryEmail = clerkUser.email_addresses?.[0]?.email_address || clerkUser.email || `${clerkUser.id}@example.local`;
@@ -293,6 +307,7 @@ const syncUserData = async (clerkUser) => {
       });
 
       await user.save();
+      console.log(`Created new user: ${user.email} with clerkId: ${clerkUser.id}`);
 
       // Create welcome notification for new users only
       try {
@@ -309,16 +324,59 @@ const syncUserData = async (clerkUser) => {
       }
     } else {
       // Update existing user with latest Clerk data (preserve existing if missing from Clerk)
-      user.firstName = clerkUser.first_name || clerkUser.given_name || user.firstName || 'User';
-      user.lastName = clerkUser.last_name || clerkUser.family_name || user.lastName || 'Name';
-      user.email = clerkUser.email_addresses?.[0]?.email_address || clerkUser.email || user.email;
-      user.profileImage = clerkUser.image_url || clerkUser.picture || user.profileImage;
-      await user.save();
+      const updatedFields = {};
+
+      const newFirstName = clerkUser.first_name || clerkUser.given_name;
+      if (newFirstName && newFirstName !== user.firstName) {
+        updatedFields.firstName = newFirstName;
+      }
+
+      const newLastName = clerkUser.last_name || clerkUser.family_name;
+      if (newLastName && newLastName !== user.lastName) {
+        updatedFields.lastName = newLastName;
+      }
+
+      const newEmail = clerkUser.email_addresses?.[0]?.email_address || clerkUser.email;
+      if (newEmail && newEmail !== user.email) {
+        updatedFields.email = newEmail;
+      }
+
+      const newProfileImage = clerkUser.image_url || clerkUser.picture;
+      if (newProfileImage && newProfileImage !== user.profileImage) {
+        updatedFields.profileImage = newProfileImage;
+      }
+
+      // Only save if there are actual changes
+      if (Object.keys(updatedFields).length > 0) {
+        Object.assign(user, updatedFields);
+        await user.save();
+        console.log(`Updated user ${user.email} with fields:`, Object.keys(updatedFields));
+      }
     }
 
     return user;
   } catch (error) {
     console.error('User sync error:', error);
+
+    // If it's a duplicate key error, try to find the existing user and update clerkId
+    if (error.code === 11000 && error.keyPattern?.email) {
+      try {
+        const email = error.keyValue.email;
+        console.log(`Attempting to recover from duplicate email error for: ${email}`);
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          // Update the existing user with the new clerkId
+          existingUser.clerkId = clerkUser.id;
+          await existingUser.save();
+          console.log(`Successfully updated existing user ${email} with clerkId: ${clerkUser.id}`);
+          return existingUser;
+        }
+      } catch (recoveryError) {
+        console.error('Failed to recover from duplicate email error:', recoveryError);
+      }
+    }
+
     throw new Error('Failed to sync user data');
   }
 };
