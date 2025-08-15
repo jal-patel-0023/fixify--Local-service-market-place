@@ -6,8 +6,6 @@ import { apiService } from '../services/api';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 const BrowsePage = () => {
-  console.log('BrowsePage component is rendering!');
-
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('newest');
@@ -16,7 +14,6 @@ const BrowsePage = () => {
   const { data: jobs = [], isLoading, error } = useQuery({
     queryKey: ['jobs', searchTerm, selectedCategory, sortBy],
     queryFn: async () => {
-      console.log('Fetching jobs from API...');
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (selectedCategory) params.append('category', selectedCategory);
@@ -25,50 +22,18 @@ const BrowsePage = () => {
       try {
         // Try direct fetch first to test server connectivity
         const directResponse = await fetch(`http://localhost:5000/api/jobs?${params.toString()}`);
-        console.log('Direct fetch response status:', directResponse.status);
 
         if (directResponse.ok) {
           const directData = await directResponse.json();
-          console.log('Direct fetch data:', directData);
           return directData.data || directData || [];
-        } else {
-          console.error('Direct fetch failed:', directResponse.status, directResponse.statusText);
         }
 
         // Fallback to apiService
         const response = await apiService.jobs.list(Object.fromEntries(params));
-        console.log('Jobs API response:', response);
         return response.data || response || [];
       } catch (error) {
-        console.error('Jobs API error:', error);
-
-        // Return mock data for testing
-        return [
-          {
-            _id: '1',
-            title: 'Fix Kitchen Faucet',
-            description: 'Need someone to fix a leaky kitchen faucet',
-            category: 'plumbing',
-            budget: { min: 50, max: 100 },
-            location: { address: { city: 'New York', state: 'NY' } },
-            status: 'open',
-            preferredDate: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-            creator: { firstName: 'John', lastName: 'Doe' }
-          },
-          {
-            _id: '2',
-            title: 'Paint Living Room',
-            description: 'Looking for someone to paint my living room',
-            category: 'painting',
-            budget: { min: 200, max: 400 },
-            location: { address: { city: 'Los Angeles', state: 'CA' } },
-            status: 'open',
-            preferredDate: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-            creator: { firstName: 'Jane', lastName: 'Smith' }
-          }
-        ];
+        console.error('Failed to fetch jobs:', error);
+        return [];
       }
     },
     retry: 1

@@ -17,54 +17,64 @@ import { apiService } from '../services/api';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 const DashboardPage = () => {
-  console.log('DashboardPage component is rendering!');
-
   const { user } = useAuth();
 
-  // Mock data for testing
-  const myJobs = [
-    {
-      _id: '1',
-      title: 'Fix Kitchen Faucet',
-      description: 'Need someone to fix a leaky kitchen faucet',
-      budget: { min: 50, max: 100 },
-      status: 'open',
-      createdAt: new Date().toISOString()
+  // Fetch user's jobs
+  const { data: myJobs = [], isLoading: jobsLoading } = useQuery({
+    queryKey: ['my-jobs'],
+    queryFn: async () => {
+      try {
+        const response = await apiService.jobs.myJobs();
+        return response.data || response || [];
+      } catch (error) {
+        console.error('Failed to fetch my jobs:', error);
+        return [];
+      }
     },
-    {
-      _id: '2',
-      title: 'Paint Living Room',
-      description: 'Looking for someone to paint my living room',
-      budget: { min: 200, max: 400 },
-      status: 'in_progress',
-      createdAt: new Date(Date.now() - 86400000).toISOString()
-    }
-  ];
+    enabled: !!user
+  });
 
-  const stats = {
-    jobsPosted: 5,
-    jobsCompleted: 3,
-    totalEarnings: 850
-  };
-
-  const notifications = [
-    {
-      _id: '1',
-      title: 'New job application',
-      message: 'Someone applied to your kitchen faucet job',
-      createdAt: new Date().toISOString()
+  // Fetch user stats
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['user-stats'],
+    queryFn: async () => {
+      try {
+        const response = await apiService.auth.getStats();
+        return response.data || response || {};
+      } catch (error) {
+        console.error('Failed to fetch user stats:', error);
+        return {
+          jobsPosted: 0,
+          jobsCompleted: 0,
+          totalEarnings: 0
+        };
+      }
     },
-    {
-      _id: '2',
-      title: 'Job completed',
-      message: 'Your painting job has been marked as completed',
-      createdAt: new Date(Date.now() - 3600000).toISOString()
-    }
-  ];
+    enabled: !!user
+  });
 
-  const jobsLoading = false;
-  const statsLoading = false;
-  const notificationsLoading = false;
+  // Fetch recent notifications
+  const { data: notifications = [], isLoading: notificationsLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/notifications?limit=5', {
+          headers: {
+            'Authorization': `Bearer ${await user?.getToken?.() || ''}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          return data.data || data || [];
+        }
+        return [];
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+        return [];
+      }
+    },
+    enabled: !!user
+  });
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
