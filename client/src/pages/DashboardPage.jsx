@@ -13,19 +13,23 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { apiService } from '../services/api';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 const DashboardPage = () => {
   const { user } = useAuth();
+  const { getToken } = useClerkAuth();
 
   // Fetch user's jobs
-  const { data: myJobs = [], isLoading: jobsLoading } = useQuery({
+  const { data: myJobsData = [], isLoading: jobsLoading } = useQuery({
     queryKey: ['my-jobs'],
     queryFn: async () => {
       try {
         const response = await apiService.jobs.myJobs();
-        return response.data || response || [];
+        const jobs = response.data || response || [];
+        // Ensure we always return an array
+        return Array.isArray(jobs) ? jobs : [];
       } catch (error) {
         console.error('Failed to fetch my jobs:', error);
         return [];
@@ -34,13 +38,21 @@ const DashboardPage = () => {
     enabled: !!user
   });
 
+  // Ensure myJobs is always an array
+  const myJobs = Array.isArray(myJobsData) ? myJobsData : [];
+
   // Fetch user stats
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['user-stats'],
     queryFn: async () => {
       try {
         const response = await apiService.auth.getStats();
-        return response.data || response || {};
+        const statsData = response.data || response || {};
+        return {
+          jobsPosted: statsData.jobsPosted || 0,
+          jobsCompleted: statsData.jobsCompleted || 0,
+          totalEarnings: statsData.totalEarnings || 0
+        };
       } catch (error) {
         console.error('Failed to fetch user stats:', error);
         return {
@@ -58,14 +70,16 @@ const DashboardPage = () => {
     queryKey: ['notifications'],
     queryFn: async () => {
       try {
+        const token = await getToken();
         const response = await fetch('http://localhost:5000/api/notifications?limit=5', {
           headers: {
-            'Authorization': `Bearer ${await user?.getToken?.() || ''}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         });
         if (response.ok) {
           const data = await response.json();
-          return data.data || data || [];
+          return Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
         }
         return [];
       } catch (error) {

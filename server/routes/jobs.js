@@ -16,26 +16,39 @@ const { Job } = require('../models');
 
 // Public routes (no authentication required)
 router.get('/', optionalAuth, jobController.getJobs);
-router.get('/:id', optionalAuth, jobController.getJob);
+
+// Job categories endpoint (must be before /:id route)
+router.get('/categories', (req, res) => {
+  const categories = [
+    'plumbing', 'electrical', 'carpentry', 'cleaning',
+    'gardening', 'painting', 'moving', 'repair', 'other'
+  ];
+  res.json({ success: true, data: categories });
+});
 
 // Protected routes (authentication required)
 router.use('/', authenticateUser, validateSession);
 
+// User-specific job lists (must be before /:id route)
+router.get('/my-jobs', jobController.getMyJobs);
+router.get('/accepted-jobs', jobController.getAcceptedJobs);
+router.get('/saved', jobController.getSavedJobs);
+
 // Job CRUD operations
-router.post('/', 
-  jobValidationRules.create, 
-  handleValidationErrors, 
+router.post('/',
+  jobValidationRules.create,
+  handleValidationErrors,
   jobController.createJob
 );
 
-router.put('/:id', 
+router.put('/:id',
   checkResourceOwnership(Job),
-  jobValidationRules.update, 
-  handleValidationErrors, 
+  jobValidationRules.update,
+  handleValidationErrors,
   jobController.updateJob
 );
 
-router.delete('/:id', 
+router.delete('/:id',
   checkResourceOwnership(Job),
   jobController.deleteJob
 );
@@ -46,32 +59,10 @@ router.post('/:id/complete', jobController.completeJob);
 router.post('/:id/cancel', jobController.cancelJob);
 router.post('/:id/save', jobController.toggleJobSave);
 
-// User-specific job lists
-router.get('/my-jobs', jobController.getMyJobs);
-router.get('/accepted-jobs', jobController.getAcceptedJobs);
-router.get('/saved', jobController.getSavedJobs);
+// Public job detail route (must be last among GET routes)
+router.get('/:id', optionalAuth, jobController.getJob);
 
-// Job categories endpoint
-router.get('/categories', (req, res) => {
-  const categories = [
-    'plumbing',
-    'electrical',
-    'carpentry',
-    'cleaning',
-    'gardening',
-    'painting',
-    'moving',
-    'repairs',
-    'installation',
-    'maintenance',
-    'other'
-  ];
-  
-  res.json({
-    success: true,
-    data: categories
-  });
-});
+
 
 // Job statistics endpoint
 router.get('/stats/overview', async (req, res) => {
