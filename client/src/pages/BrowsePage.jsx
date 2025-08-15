@@ -36,9 +36,9 @@ const BrowsePage = () => {
         }
 
         // Fallback to apiService
-        const response = await apiService.get(`/jobs?${params.toString()}`);
+        const response = await apiService.jobs.list(Object.fromEntries(params));
         console.log('Jobs API response:', response);
-        return response.data || [];
+        return response.data || response || [];
       } catch (error) {
         console.error('Jobs API error:', error);
 
