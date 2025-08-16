@@ -281,8 +281,8 @@ const deleteJob = async (req, res) => {
     if (job.assignedTo) {
       await createJobNotification(
         job.assignedTo,
-        req.user._id,
         'job_cancelled',
+        job._id,
         'Job Cancelled',
         `The job "${job.title}" has been cancelled by the client.`
       );
@@ -334,8 +334,8 @@ const acceptJob = async (req, res) => {
     // Notify job creator
     await createJobNotification(
       job.creator,
-      req.user._id,
       'job_accepted',
+      job._id,
       'Job Accepted',
       `Your job "${job.title}" has been accepted by ${req.user.firstName} ${req.user.lastName}.`
     );
@@ -409,8 +409,8 @@ const completeJob = async (req, res) => {
     if (otherUser) {
       await createJobNotification(
         otherUser,
-        req.user._id,
         'job_completed',
+        job._id,
         'Job Completed',
         `The job "${job.title}" has been marked as completed.`
       );
@@ -468,8 +468,8 @@ const cancelJob = async (req, res) => {
     if (otherUser) {
       await createJobNotification(
         otherUser,
-        req.user._id,
         'job_cancelled',
+        job._id,
         'Job Cancelled',
         `The job "${job.title}" has been cancelled.${reason ? ` Reason: ${reason}` : ''}`
       );

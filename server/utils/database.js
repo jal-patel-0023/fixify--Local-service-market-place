@@ -87,8 +87,13 @@ const createPagination = async (...args) => {
  * @returns {Object} MongoDB filter query
  */
 const createJobFilters = (filters = {}) => {
-  const query = { status: 'open' };
-  
+  const query = {};
+
+  // Only filter by status if explicitly requested
+  if (filters.status) {
+    query.status = filters.status;
+  }
+
   if (filters.category) {
     query.category = filters.category;
   }
