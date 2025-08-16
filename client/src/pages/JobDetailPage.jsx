@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useAuth as useClerkAuth } from '@clerk/clerk-react';
-import { apiService } from '../services/api';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -35,8 +34,21 @@ const JobDetailPage = () => {
       console.log('Fetching job details for ID:', id);
 
       try {
-        // Try direct fetch first
-        const response = await fetch(`http://localhost:5000/api/jobs/${id}`);
+        // Always try with auth token first
+        const token = await getToken();
+
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`http://localhost:5000/api/jobs/${id}`, {
+          headers
+        });
+
         console.log('Job detail response status:', response.status);
 
         if (response.ok) {
@@ -44,12 +56,10 @@ const JobDetailPage = () => {
           console.log('Job detail data:', data);
           return data.data || data;
         } else {
-          console.error('Job detail fetch failed:', response.status);
+          const errorText = await response.text();
+          console.error('Job detail fetch failed:', response.status, errorText);
+          throw new Error(`Failed to fetch job: ${response.status}`);
         }
-
-        // Fallback to apiService
-        const apiResponse = await apiService.jobs.getById(id);
-        return apiResponse.data || apiResponse;
       } catch (error) {
         console.error('Job detail error:', error);
         throw error;
@@ -183,7 +193,7 @@ const JobDetailPage = () => {
                   {job.title}
                 </h1>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(job.status)}`}>
-                  {job.status.replace('_', ' ').toUpperCase()}
+                  {job.status ? job.status.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
                 </span>
                 {job.isUrgent && (
                   <span className="px-2 py-1 bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200 rounded-full text-xs font-medium">
