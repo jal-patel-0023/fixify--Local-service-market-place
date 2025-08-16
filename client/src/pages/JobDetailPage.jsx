@@ -24,7 +24,7 @@ const JobDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { getToken } = useClerkAuth();
 
   // Fetch job details
@@ -131,10 +131,11 @@ const JobDetailPage = () => {
   };
 
   const canAcceptJob = () => {
+    const userId = profile?.data?.data?._id;
     return job &&
            job.status === 'open' &&
-           user &&
-           job.creator?._id !== user._id;
+           userId &&
+           job.creator?._id !== userId;
   };
 
   if (isLoading) {
@@ -195,6 +196,11 @@ const JobDetailPage = () => {
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(job.status)}`}>
                   {job.status ? job.status.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
                 </span>
+                {profile?.data?.data?._id && job.creator?._id === profile.data.data._id && (
+                  <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm font-medium">
+                    YOUR JOB
+                  </span>
+                )}
                 {job.isUrgent && (
                   <span className="px-2 py-1 bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200 rounded-full text-xs font-medium">
                     URGENT

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { MapPin, Clock, DollarSign, User, Filter, Search } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 import { apiService } from '../services/api';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 const BrowsePage = () => {
+  const { user, profile } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('newest');
@@ -183,9 +185,16 @@ const BrowsePage = () => {
               >
                 {/* Status Badge */}
                 <div className="flex justify-between items-start mb-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
-                    {job.status.replace('_', ' ').toUpperCase()}
-                  </span>
+                  <div className="flex gap-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
+                      {job.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                    {profile?.data?.data?._id && job.creator?._id === profile.data.data._id && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-xs font-medium">
+                        YOUR JOB
+                      </span>
+                    )}
+                  </div>
                   {job.isUrgent && (
                     <span className="px-2 py-1 bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200 rounded-full text-xs font-medium">
                       URGENT
