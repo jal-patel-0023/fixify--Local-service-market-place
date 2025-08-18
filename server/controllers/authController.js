@@ -386,6 +386,64 @@ const markAllNotificationsRead = async (req, res) => {
   }
 };
 
+/**
+ * Get user by ID (for messaging)
+ * @route GET /api/auth/user/:userId
+ */
+const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId)
+      .select('firstName lastName profileImage email clerkId accountType');
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        message: 'The requested user does not exist'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Get user by ID error:', error);
+    res.status(500).json({
+      error: 'Failed to get user',
+      message: 'Internal server error'
+    });
+  }
+};
+
+/**
+ * Get public profile
+ * @route GET /api/auth/public/profile/:userId
+ */
+const getPublicProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId)
+      .select('firstName lastName profileImage accountType rating stats createdAt');
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        message: 'The requested user does not exist'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Get public profile error:', error);
+    res.status(500).json({
+      error: 'Failed to get profile',
+      message: 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   getCurrentUser,
   updateProfile,
@@ -398,5 +456,7 @@ module.exports = {
   refreshSession,
   getNotifications,
   markNotificationRead,
-  markAllNotificationsRead
-}; 
+  markAllNotificationsRead,
+  getUserById,
+  getPublicProfile
+};

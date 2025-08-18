@@ -6,7 +6,7 @@ const { createSystemNotification } = require('../utils/database');
 // Get conversations for a user
 const getConversations = async (req, res) => {
   try {
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
     
     // Find all conversations where user is either sender or recipient
     const conversations = await Message.aggregate([
@@ -51,7 +51,7 @@ const getConversations = async (req, res) => {
         $lookup: {
           from: 'users',
           localField: '_id',
-          foreignField: 'clerkId',
+          foreignField: '_id',
           as: 'otherUser'
         }
       },
@@ -62,7 +62,7 @@ const getConversations = async (req, res) => {
         $project: {
           conversationId: '$_id',
           otherUser: {
-            clerkId: '$otherUser.clerkId',
+            _id: '$otherUser._id',
             firstName: '$otherUser.firstName',
             lastName: '$otherUser.lastName',
             profileImage: '$otherUser.profileImage',
@@ -99,7 +99,7 @@ const getConversations = async (req, res) => {
 const getMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     // Verify user is part of this conversation
     const conversation = await Message.findOne({
@@ -124,8 +124,8 @@ const getMessages = async (req, res) => {
       ]
     })
     .sort({ createdAt: 1 })
-    .populate('sender', 'clerkId firstName lastName profileImage')
-    .populate('recipient', 'clerkId firstName lastName profileImage');
+    .populate('sender', '_id firstName lastName profileImage')
+    .populate('recipient', '_id firstName lastName profileImage');
 
     // Mark messages as read
     await Message.updateMany(
@@ -153,11 +153,18 @@ const getMessages = async (req, res) => {
 // Send a message
 const sendMessage = async (req, res) => {
   try {
+    console.log('=== Send Message Request ===');
+    console.log('Request body:', req.body);
+    console.log('User:', req.user);
+
     const { recipientId, content, type = 'text', jobId = null } = req.body;
-    const senderId = req.user.clerkId;
+    const senderId = req.user._id;
+
+    console.log('Sender ID:', senderId);
+    console.log('Recipient ID:', recipientId);
 
     // Validate recipient exists
-    const recipient = await User.findOne({ clerkId: recipientId });
+    const recipient = await User.findById(recipientId);
     if (!recipient) {
       return res.status(404).json({
         success: false,
@@ -165,8 +172,8 @@ const sendMessage = async (req, res) => {
       });
     }
 
-    // Validate sender exists
-    const sender = await User.findOne({ clerkId: senderId });
+    // Validate sender exists (should always exist since user is authenticated)
+    const sender = await User.findById(senderId);
     if (!sender) {
       return res.status(404).json({
         success: false,
@@ -187,18 +194,16 @@ const sendMessage = async (req, res) => {
     await message.save();
 
     // Populate sender and recipient info
-    await message.populate('sender', 'clerkId firstName lastName profileImage');
-    await message.populate('recipient', 'clerkId firstName lastName profileImage');
+    await message.populate('sender', '_id firstName lastName profileImage');
+    await message.populate('recipient', '_id firstName lastName profileImage');
 
-    // Create notification for recipient
-    await createSystemNotification({
-      recipient: recipientId,
-      sender: senderId,
-      type: 'message',
-      title: 'New Message',
-      message: `You have a new message from ${sender.firstName} ${sender.lastName}`,
-      relatedJob: jobId
-    });
+    // Create notification for recipient (temporarily disabled)
+    // await createSystemNotification(
+    //   recipientId,
+    //   'message',
+    //   'New Message',
+    //   `You have a new message from ${sender.firstName} ${sender.lastName}`
+    // );
 
     res.json({
       success: true,
@@ -217,7 +222,7 @@ const sendMessage = async (req, res) => {
 const markAsRead = async (req, res) => {
   try {
     const { conversationId } = req.params;
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     await Message.updateMany(
       {
@@ -245,7 +250,7 @@ const markAsRead = async (req, res) => {
 const deleteMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     const message = await Message.findById(messageId);
     
@@ -282,7 +287,7 @@ const deleteMessage = async (req, res) => {
 // Get unread message count
 const getUnreadCount = async (req, res) => {
   try {
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     const unreadCount = await Message.countDocuments({
       recipient: userId,
@@ -306,7 +311,7 @@ const getUnreadCount = async (req, res) => {
 const searchMessages = async (req, res) => {
   try {
     const { query } = req.query;
-    const userId = req.user.clerkId;
+    const userId = req.user._id;
 
     if (!query || query.trim().length < 2) {
       return res.status(400).json({
@@ -330,8 +335,8 @@ const searchMessages = async (req, res) => {
     })
     .sort({ createdAt: -1 })
     .limit(20)
-    .populate('sender', 'clerkId firstName lastName profileImage')
-    .populate('recipient', 'clerkId firstName lastName profileImage');
+    .populate('sender', '_id firstName lastName profileImage')
+    .populate('recipient', '_id firstName lastName profileImage');
 
     res.json({
       success: true,

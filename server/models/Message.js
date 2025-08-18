@@ -68,16 +68,14 @@ const messageSchema = new mongoose.Schema({
     index: true
   },
   
-  // System messages (for job updates, etc.)
+  // System messages (for job updates, etc.) - Optional field
   systemMessage: {
     type: {
       type: String,
-      enum: ['job_accepted', 'job_completed', 'job_cancelled', 'payment_received', 'review_requested'],
-      default: null
+      enum: ['job_accepted', 'job_completed', 'job_cancelled', 'payment_received', 'review_requested']
     },
     metadata: {
-      type: mongoose.Schema.Types.Mixed,
-      default: null
+      type: mongoose.Schema.Types.Mixed
     }
   }
 }, {

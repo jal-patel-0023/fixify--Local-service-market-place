@@ -1,9 +1,5 @@
 const { User } = require('../models');
 
-/**
- * Verify Clerk token from client (JWT or session token) and return Clerk user data
- * @param {string} token - Clerk JWT (from getToken) or session token
- * @returns {Object} { user: <Clerk user object>, claims?: <token claims> }
 // DEV-ONLY fallback: decode JWT without signature verification to extract claims
 const decodeJwtNoVerify = (token) => {
   try {
@@ -16,6 +12,10 @@ const decodeJwtNoVerify = (token) => {
   }
 };
 
+/**
+ * Verify Clerk token from client (JWT or session token) and return Clerk user data
+ * @param {string} token - Clerk JWT (from getToken) or session token
+ * @returns {Object} { user: <Clerk user object>, claims?: <token claims> }
  */
 const verifySessionToken = async (token) => {
   const secret = process.env.CLERK_SECRET_KEY;

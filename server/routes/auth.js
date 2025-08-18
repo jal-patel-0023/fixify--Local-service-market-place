@@ -70,9 +70,9 @@ router.get('/admin/users', (req, res) => {
 
 // Optional authentication routes (can work with or without auth)
 router.use('/public', optionalAuth);
-router.get('/public/profile/:userId', (req, res) => {
-  // Public profile route (to be implemented)
-  res.json({ message: 'Public profile endpoint' });
-});
+router.get('/public/profile/:userId', authController.getPublicProfile);
+
+// Get user by ID (for messaging)
+router.get('/user/:userId', authenticateUser, validateSession, authController.getUserById);
 
 module.exports = router; 

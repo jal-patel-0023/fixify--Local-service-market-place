@@ -25,7 +25,7 @@ const MessageList = ({
   const { data: messages, isLoading, error } = useQuery({
     queryKey: ['messages', conversationId],
     queryFn: () => apiService.messages.getMessages(conversationId),
-    enabled: !!conversationId,
+    enabled: !!conversationId && !conversationId.startsWith('new_'), // Don't fetch for new conversations
     refetchInterval: 10000, // Refetch every 10 seconds
     staleTime: 5000, // Consider data stale after 5 seconds
   });
@@ -97,23 +97,25 @@ const MessageList = ({
 
   // Handle sending message
   const handleSendMessage = (content) => {
-    if (!content.trim() || !conversationId) return;
+    if (!content.trim()) return;
 
     const messageData = {
-      recipientId: otherUser.clerkId,
+      recipientId: otherUser._id, // Use MongoDB _id instead of clerkId
       content: content.trim(),
       type: 'text'
     };
 
     sendMessageMutation.mutate(messageData);
 
-    // Emit socket event for real-time updates
-    socketService.sendMessage({
-      ...messageData,
-      conversationId,
-      senderId: user.id,
-      timestamp: new Date().toISOString()
-    });
+    // Emit socket event for real-time updates (only if we have a real conversation)
+    if (conversationId && !conversationId.startsWith('new_')) {
+      socketService.sendMessage({
+        ...messageData,
+        conversationId,
+        senderId: user.id,
+        timestamp: new Date().toISOString()
+      });
+    }
   };
 
   // Handle typing indicator
