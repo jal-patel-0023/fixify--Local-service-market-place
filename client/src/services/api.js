@@ -128,6 +128,7 @@ export const apiService = {
     accept: (id) => api.post(apiEndpoints.jobs.accept(id)),
     complete: (id, data) => api.post(apiEndpoints.jobs.complete(id), data),
     cancel: (id, data) => api.post(apiEndpoints.jobs.cancel(id), data),
+    reopen: (id) => api.post(apiEndpoints.jobs.reopen(id)),
     save: (id) => api.post(apiEndpoints.jobs.save(id)),
     myJobs: (params) => api.get(apiEndpoints.jobs.myJobs, { params }),
     acceptedJobs: (params) => api.get(apiEndpoints.jobs.acceptedJobs, { params }),

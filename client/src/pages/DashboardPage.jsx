@@ -47,6 +47,13 @@ const DashboardPage = () => {
   // console.log('Dashboard - myJobsData:', myJobsData);
   // console.log('Dashboard - myJobs:', myJobs);
 
+  // Debug budget structure
+  if (myJobs.length > 0) {
+    console.log('Sample job budget structure:', myJobs[0].budget);
+    console.log('Sample job minBudget:', myJobs[0].minBudget);
+    console.log('Sample job maxBudget:', myJobs[0].maxBudget);
+  }
+
   // Calculate stats from available data
   const stats = React.useMemo(() => {
     if (!myJobs || myJobs.length === 0) {
@@ -67,11 +74,33 @@ const DashboardPage = () => {
 
     const totalEarnings = myJobs
       .filter(job => job.status === 'completed')
-      .reduce((total, job) => total + (job.budget || 0), 0);
+      .reduce((total, job) => {
+        let budget = 0;
+        if (typeof job.budget === 'number') {
+          budget = job.budget;
+        } else if (typeof job.minBudget === 'number') {
+          budget = job.minBudget;
+        } else if (job.budget && typeof job.budget.min === 'number') {
+          budget = job.budget.min;
+        } else if (job.budget && typeof job.budget.max === 'number') {
+          budget = job.budget.max;
+        }
+        return total + budget;
+      }, 0);
 
     const totalBudget = myJobs.reduce((total, job) => {
-      const budget = job.budget || job.minBudget || 0;
-      return total + (typeof budget === 'number' ? budget : 0);
+      // Handle different budget structures
+      let budget = 0;
+      if (typeof job.budget === 'number') {
+        budget = job.budget;
+      } else if (typeof job.minBudget === 'number') {
+        budget = job.minBudget;
+      } else if (job.budget && typeof job.budget.min === 'number') {
+        budget = job.budget.min;
+      } else if (job.budget && typeof job.budget.max === 'number') {
+        budget = job.budget.max;
+      }
+      return total + budget;
     }, 0);
 
     const averageJobValue = jobsPosted > 0 && totalBudget > 0

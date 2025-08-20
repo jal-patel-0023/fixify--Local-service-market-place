@@ -46,6 +46,7 @@ export const apiEndpoints = {
     accept: (id) => `/jobs/${id}/accept`,
     complete: (id) => `/jobs/${id}/complete`,
     cancel: (id) => `/jobs/${id}/cancel`,
+    reopen: (id) => `/jobs/${id}/reopen`,
     save: (id) => `/jobs/${id}/save`,
     myJobs: '/jobs/my-jobs',
     acceptedJobs: '/jobs/accepted-jobs',

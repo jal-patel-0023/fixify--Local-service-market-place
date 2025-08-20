@@ -490,6 +490,71 @@ const cancelJob = async (req, res) => {
 };
 
 /**
+ * Reopen a job (make it available again)
+ * @route POST /api/jobs/:id/reopen
+ */
+const reopenJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({
+        error: 'Job not found',
+        message: 'The requested job does not exist'
+      });
+    }
+
+    // Only job creator can reopen
+    if (job.creator.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'Only the job creator can reopen this job'
+      });
+    }
+
+    // Can only reopen accepted or in_progress jobs
+    if (!['accepted', 'in_progress'].includes(job.status)) {
+      return res.status(400).json({
+        error: 'Invalid status',
+        message: 'Can only reopen accepted or in-progress jobs'
+      });
+    }
+
+    // Store the previous assignee for notification
+    const previousAssignee = job.assignedTo;
+
+    // Reopen the job
+    job.status = 'open';
+    job.assignedTo = null;
+    job.acceptedAt = null;
+    await job.save();
+
+    // Notify the previous assignee
+    if (previousAssignee) {
+      await createJobNotification(
+        previousAssignee,
+        'job_reopened',
+        job._id,
+        'Job Reopened',
+        `The job "${job.title}" has been reopened by the creator.`
+      );
+    }
+
+    res.json({
+      success: true,
+      data: job,
+      message: 'Job reopened successfully'
+    });
+  } catch (error) {
+    console.error('Reopen job error:', error);
+    res.status(500).json({
+      error: 'Failed to reopen job',
+      message: 'Internal server error'
+    });
+  }
+};
+
+/**
  * Get user's posted jobs
  * @route GET /api/jobs/my-jobs
  */
@@ -706,8 +771,9 @@ module.exports = {
   acceptJob,
   completeJob,
   cancelJob,
+  reopenJob,
   getMyJobs,
   getAcceptedJobs,
   toggleJobSave,
   getSavedJobs
-}; 
+};

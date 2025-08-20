@@ -24,6 +24,7 @@ const notificationSchema = new mongoose.Schema({
       'job_accepted',
       'job_completed',
       'job_cancelled',
+      'job_reopened',
       'message_received',
       'review_received',
       'payment_received',

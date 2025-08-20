@@ -57,6 +57,7 @@ router.delete('/:id',
 router.post('/:id/accept', jobController.acceptJob);
 router.post('/:id/complete', jobController.completeJob);
 router.post('/:id/cancel', jobController.cancelJob);
+router.post('/:id/reopen', jobController.reopenJob);
 router.post('/:id/save', jobController.toggleJobSave);
 
 // Public job detail route (must be last among GET routes)

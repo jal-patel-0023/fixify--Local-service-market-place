@@ -17,7 +17,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { apiService } from '../services/api';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
+import ConfirmationModal from '../components/UI/ConfirmationModal';
 import toast from 'react-hot-toast';
 
 const JobDetailPage = () => {
@@ -26,6 +28,23 @@ const JobDetailPage = () => {
   const queryClient = useQueryClient();
   const { user, profile } = useAuth();
   const { getToken } = useClerkAuth();
+
+  // Modal states
+  const [confirmModal, setConfirmModal] = React.useState({
+    isOpen: false,
+    type: 'warning',
+    title: '',
+    message: '',
+    action: null
+  });
+
+  // Local loading states for immediate feedback
+  const [localLoading, setLocalLoading] = React.useState({
+    accept: false,
+    complete: false,
+    cancel: false,
+    reopen: false
+  });
 
   // Fetch job details
   const { data: job, isLoading, error } = useQuery({
@@ -91,9 +110,76 @@ const JobDetailPage = () => {
       toast.success('Job accepted successfully!');
       queryClient.invalidateQueries(['job', id]);
       queryClient.invalidateQueries(['jobs']);
+      setConfirmModal({ isOpen: false, type: 'warning', title: '', message: '', action: null });
+      setLocalLoading(prev => ({ ...prev, accept: false }));
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to accept job');
+      setConfirmModal({ isOpen: false, type: 'warning', title: '', message: '', action: null });
+      setLocalLoading(prev => ({ ...prev, accept: false }));
+    }
+  });
+
+  // Complete job mutation
+  const completeJobMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiService.jobs.complete(id);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Job marked as completed!');
+      queryClient.invalidateQueries(['job', id]);
+      queryClient.invalidateQueries(['jobs']);
+      queryClient.invalidateQueries(['my-jobs']);
+      setConfirmModal({ isOpen: false, type: 'warning', title: '', message: '', action: null });
+      setLocalLoading(prev => ({ ...prev, complete: false }));
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to complete job');
+      setConfirmModal({ isOpen: false, type: 'warning', title: '', message: '', action: null });
+      setLocalLoading(prev => ({ ...prev, complete: false }));
+    }
+  });
+
+  // Cancel job mutation
+  const cancelJobMutation = useMutation({
+    mutationFn: async (reason) => {
+      const response = await apiService.jobs.cancel(id, { reason });
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Job cancelled successfully!');
+      queryClient.invalidateQueries(['job', id]);
+      queryClient.invalidateQueries(['jobs']);
+      queryClient.invalidateQueries(['my-jobs']);
+      setConfirmModal({ isOpen: false, type: 'warning', title: '', message: '', action: null });
+      setLocalLoading(prev => ({ ...prev, cancel: false }));
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to cancel job');
+      setConfirmModal({ isOpen: false, type: 'warning', title: '', message: '', action: null });
+      setLocalLoading(prev => ({ ...prev, cancel: false }));
+    }
+  });
+
+  // Reopen job mutation
+  const reopenJobMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiService.jobs.reopen(id);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Job reopened successfully!');
+      queryClient.invalidateQueries(['job', id]);
+      queryClient.invalidateQueries(['jobs']);
+      queryClient.invalidateQueries(['my-jobs']);
+      setConfirmModal({ isOpen: false, type: 'warning', title: '', message: '', action: null });
+      setLocalLoading(prev => ({ ...prev, reopen: false }));
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to reopen job');
+      setConfirmModal({ isOpen: false, type: 'warning', title: '', message: '', action: null });
+      setLocalLoading(prev => ({ ...prev, reopen: false }));
     }
   });
 
@@ -136,6 +222,83 @@ const JobDetailPage = () => {
            job.status === 'open' &&
            userId &&
            job.creator?._id !== userId;
+  };
+
+  const canCompleteJob = () => {
+    const userId = profile?.data?.data?._id;
+    return job &&
+           (job.status === 'accepted' || job.status === 'in_progress') &&
+           userId &&
+           job.creator?._id === userId; // Only job creator can mark as complete
+  };
+
+  const canCancelJob = () => {
+    const userId = profile?.data?.data?._id;
+    return job &&
+           (job.status === 'accepted' || job.status === 'in_progress') &&
+           userId &&
+           job.assignedTo?._id === userId; // Only assigned user can cancel
+  };
+
+  const canReopenJob = () => {
+    const userId = profile?.data?.data?._id;
+    return job &&
+           (job.status === 'accepted' || job.status === 'in_progress') &&
+           userId &&
+           job.creator?._id === userId; // Only job creator can reopen
+  };
+
+  // Modal helper functions
+  const showAcceptConfirmation = () => {
+    setConfirmModal({
+      isOpen: true,
+      type: 'success',
+      title: 'Accept Job',
+      message: `Are you sure you want to accept "${job.title}"? You will be responsible for completing this job.`,
+      action: () => {
+        setLocalLoading(prev => ({ ...prev, accept: true }));
+        acceptJobMutation.mutate();
+      }
+    });
+  };
+
+  const showCompleteConfirmation = () => {
+    setConfirmModal({
+      isOpen: true,
+      type: 'success',
+      title: 'Mark as Complete',
+      message: `Are you sure you want to mark "${job.title}" as completed? This action cannot be undone and will finalize the job.`,
+      action: () => {
+        setLocalLoading(prev => ({ ...prev, complete: true }));
+        completeJobMutation.mutate();
+      }
+    });
+  };
+
+  const showCancelConfirmation = () => {
+    setConfirmModal({
+      isOpen: true,
+      type: 'danger',
+      title: 'Cancel Job',
+      message: `Are you sure you want to cancel your acceptance of "${job.title}"? The job will become available for others to accept.`,
+      action: () => {
+        setLocalLoading(prev => ({ ...prev, cancel: true }));
+        cancelJobMutation.mutate('User cancelled acceptance');
+      }
+    });
+  };
+
+  const showReopenConfirmation = () => {
+    setConfirmModal({
+      isOpen: true,
+      type: 'warning',
+      title: 'Reopen Job',
+      message: `Are you sure you want to reopen "${job.title}"? This will remove the current assignee and make the job available for others to accept.`,
+      action: () => {
+        setLocalLoading(prev => ({ ...prev, reopen: true }));
+        reopenJobMutation.mutate();
+      }
+    });
   };
 
   if (isLoading) {
@@ -248,14 +411,56 @@ const JobDetailPage = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             {canAcceptJob() && (
               <button
-                onClick={() => acceptJobMutation.mutate()}
-                disabled={acceptJobMutation.isLoading}
-                className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                onClick={showAcceptConfirmation}
+                disabled={acceptJobMutation.isLoading || localLoading.accept}
+                className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
               >
-                {acceptJobMutation.isLoading ? 'Accepting...' : 'Accept Job'}
+                {(acceptJobMutation.isLoading || localLoading.accept) && (
+                  <div className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                )}
+                {(acceptJobMutation.isLoading || localLoading.accept) ? 'Accepting...' : 'Accept Job'}
+              </button>
+            )}
+
+            {canCompleteJob() && (
+              <button
+                onClick={showCompleteConfirmation}
+                disabled={completeJobMutation.isLoading || localLoading.complete}
+                className="px-6 py-2 bg-success-600 text-white rounded-lg hover:bg-success-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              >
+                {(completeJobMutation.isLoading || localLoading.complete) && (
+                  <div className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                )}
+                {(completeJobMutation.isLoading || localLoading.complete) ? 'Completing...' : 'Mark as Complete'}
+              </button>
+            )}
+
+            {canCancelJob() && (
+              <button
+                onClick={showCancelConfirmation}
+                disabled={cancelJobMutation.isLoading || localLoading.cancel}
+                className="px-6 py-2 bg-error-600 text-white rounded-lg hover:bg-error-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              >
+                {(cancelJobMutation.isLoading || localLoading.cancel) && (
+                  <div className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                )}
+                {(cancelJobMutation.isLoading || localLoading.cancel) ? 'Cancelling...' : 'Cancel Acceptance'}
+              </button>
+            )}
+
+            {canReopenJob() && (
+              <button
+                onClick={showReopenConfirmation}
+                disabled={reopenJobMutation.isLoading || localLoading.reopen}
+                className="px-6 py-2 bg-warning-600 text-white rounded-lg hover:bg-warning-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              >
+                {(reopenJobMutation.isLoading || localLoading.reopen) && (
+                  <div className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                )}
+                {(reopenJobMutation.isLoading || localLoading.reopen) ? 'Reopening...' : 'Reopen Job'}
               </button>
             )}
 
@@ -444,6 +649,28 @@ const JobDetailPage = () => {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, type: 'warning', title: '', message: '', action: null })}
+        onConfirm={confirmModal.action}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        confirmText={
+          confirmModal.type === 'success' ? 'Yes, Accept' :
+          confirmModal.type === 'danger' ? 'Yes, Cancel' :
+          confirmModal.type === 'warning' ? 'Yes, Reopen' :
+          'Yes, Complete'
+        }
+        isLoading={
+          acceptJobMutation.isLoading ||
+          completeJobMutation.isLoading ||
+          cancelJobMutation.isLoading ||
+          reopenJobMutation.isLoading
+        }
+      />
     </div>
   );
 };
