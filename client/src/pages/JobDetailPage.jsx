@@ -259,7 +259,7 @@ const JobDetailPage = () => {
               </button>
             )}
 
-            {job.creator && (
+            {job.creator && profile?.data?.data?._id !== job.creator._id && (
               <Link
                 to={`/messages?user=${job.creator._id}`}
                 className="inline-flex items-center px-4 py-2 border border-secondary-300 dark:border-secondary-600 text-secondary-700 dark:text-secondary-300 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
@@ -419,13 +419,15 @@ const JobDetailPage = () => {
                 )}
 
                 <div className="flex items-center space-x-4 mt-3">
-                  <Link
-                    to={`/messages?user=${job.creator._id}`}
-                    className="inline-flex items-center text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    Message
-                  </Link>
+                  {profile?.data?.data?._id !== job.creator._id && (
+                    <Link
+                      to={`/messages?user=${job.creator._id}`}
+                      className="inline-flex items-center text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-1" />
+                      Message
+                    </Link>
+                  )}
 
                   {job.creator.email && (
                     <a

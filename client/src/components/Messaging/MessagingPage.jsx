@@ -8,6 +8,7 @@ import MessageList from './MessageList';
 import Card from '../UI/Card';
 import Button from '../UI/Button';
 import Input from '../UI/Input';
+import LoadingSpinner from '../UI/LoadingSpinner';
 import socketService from '../../services/socket';
 import { apiService } from '../../services/api';
 
@@ -23,6 +24,8 @@ const MessagingPage = () => {
   const [hasProcessedUrl, setHasProcessedUrl] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = React.useRef(null);
 
   // Check if we're on mobile
@@ -86,7 +89,7 @@ const MessagingPage = () => {
         );
 
         if (existingConversation) {
-          console.log('Found existing conversation, loading messages...');
+          // console.log('Found existing conversation, loading messages...');
 
           // Update conversation first
           const updatedConversation = {
@@ -95,17 +98,19 @@ const MessagingPage = () => {
             isNewConversation: false
           };
 
-          console.log('Setting updated conversation:', updatedConversation);
+          // console.log('Setting updated conversation:', updatedConversation);
           setSelectedConversation(updatedConversation);
 
           // Load messages and wait for profile data
+          setIsLoadingMessages(true);
           const messagesResponse = await apiService.messages.getMessages(existingConversation.conversationId);
           const loadedMessages = messagesResponse.data?.data || [];
 
           // Store raw messages temporarily - we'll process them when profile is ready
           setMessages(loadedMessages.map(msg => ({ ...msg, isOwn: false }))); // Temporary, will be fixed
+          setIsLoadingMessages(false);
 
-          console.log('Messages loaded, waiting for profile to calculate isOwn...');
+          // console.log('Messages loaded, waiting for profile to calculate isOwn...');
         }
       } catch (error) {
         console.error('Error checking for existing messages:', error);
@@ -117,41 +122,79 @@ const MessagingPage = () => {
     }
   }, []);
 
-  // Memoize the target user ID to prevent infinite loops
-  const targetUserId = useMemo(() => searchParams.get('user'), [searchParams]);
-  const profileUserId = useMemo(() => profile?.data?.data?._id, [profile?.data?.data?._id]);
+  // Reset state when URL changes
+  useEffect(() => {
+    setSelectedConversation(null);
+    setMessages([]);
+    setConversations([]);
+    setHasProcessedUrl(false);
+    setIsLoadingConversations(false);
+    setIsLoadingMessages(false);
+  }, [searchParams]);
 
-  // Handle user query parameter to start conversation
+  // Function to load conversations list for main messages page
+  const loadConversationsList = useCallback(async () => {
+    try {
+      setIsLoadingConversations(true);
+      // console.log('=== Loading conversations list ===');
+      const response = await apiService.messages.getConversations();
+      const conversationsList = response.data?.data || [];
+
+      // console.log('Loaded conversations:', conversationsList);
+      setConversations(conversationsList);
+
+      // If there are conversations, don't auto-select any
+      // Let user click on one to view messages
+
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      setConversations([]);
+    } finally {
+      setIsLoadingConversations(false);
+    }
+  }, []);
+
+  // Memoize the target user ID to prevent infinite loops
+  // const targetUserId = useMemo(() => searchParams.get('user'), [searchParams]);
+  // const profileUserId = useMemo(() => profile?.data?.data?._id, [profile?.data?.data?._id]);
+
+  // Handle user query parameter to start conversation OR load conversations list
   useEffect(() => {
     const currentTargetUserId = searchParams.get('user');
     const currentProfileUserId = profile?.data?.data?._id;
 
-    console.log('=== MessagingPage useEffect triggered ===');
-    console.log('Target user ID from URL:', currentTargetUserId);
-    console.log('Profile user ID:', currentProfileUserId);
-    console.log('Is starting conversation:', isStartingConversation);
-    console.log('Has processed URL:', hasProcessedUrl);
+    // console.log('=== MessagingPage useEffect triggered ===');
+    // console.log('Target user ID from URL:', currentTargetUserId);
+    // console.log('Profile user ID:', currentProfileUserId);
+    // console.log('Is starting conversation:', isStartingConversation);
+    // console.log('Has processed URL:', hasProcessedUrl);
 
     if (currentTargetUserId && currentProfileUserId && !isStartingConversation && !hasProcessedUrl) {
-      console.log('Conditions met, starting conversation...');
+      // Start conversation with specific user
+      // console.log('Conditions met, starting conversation...');
       setHasProcessedUrl(true);
       startConversationWithUser(currentTargetUserId);
+    } else if (!currentTargetUserId && currentProfileUserId && !hasProcessedUrl) {
+      // Load conversations list for main messages page
+      // console.log('Loading conversations list for main messages page...');
+      setHasProcessedUrl(true);
+      loadConversationsList();
     } else {
-      console.log('Conditions not met for starting conversation');
-      if (!currentTargetUserId) console.log('- No target user ID');
-      if (!currentProfileUserId) console.log('- No profile data');
-      if (isStartingConversation) console.log('- Already starting conversation');
-      if (hasProcessedUrl) console.log('- Already processed URL');
+      // console.log('Conditions not met for starting conversation');
+      // if (!currentTargetUserId) console.log('- No target user ID');
+      // if (!currentProfileUserId) console.log('- No profile data');
+      // if (isStartingConversation) console.log('- Already starting conversation');
+      // if (hasProcessedUrl) console.log('- Already processed URL');
     }
-  }, [searchParams, profile?.data?.data?._id, isStartingConversation, hasProcessedUrl, startConversationWithUser]);
+  }, [searchParams, profile?.data?.data?._id, isStartingConversation, hasProcessedUrl, startConversationWithUser, loadConversationsList]);
 
   // Process messages when profile data becomes available
   useEffect(() => {
     if (profile?.data?.data?._id && messages.length > 0) {
       const currentUserId = profile.data.data._id;
-      console.log('=== PROCESSING MESSAGES WITH PROFILE ===');
-      console.log('Current user ID:', currentUserId);
-      console.log('Processing', messages.length, 'messages');
+      // console.log('=== PROCESSING MESSAGES WITH PROFILE ===');
+      // console.log('Current user ID:', currentUserId);
+      // console.log('Processing', messages.length, 'messages');
 
       const processedMessages = messages.map(msg => {
         // Skip if already processed (has correct isOwn)
@@ -164,7 +207,7 @@ const MessagingPage = () => {
         const currentUserIdStr = String(currentUserId);
         const isOwn = senderIdStr === currentUserIdStr;
 
-        console.log(`Processing message: "${msg.content}" - isOwn: ${isOwn}`);
+        // console.log(`Processing message: "${msg.content}" - isOwn: ${isOwn}`);
 
         return {
           ...msg,
@@ -172,22 +215,38 @@ const MessagingPage = () => {
         };
       });
 
-      console.log('Messages processed with isOwn property');
+      // console.log('Messages processed with isOwn property');
       setMessages(processedMessages);
-
-      // Scroll to bottom after processing
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
     }
   }, [profile?.data?.data?._id, messages.length]);
 
   const handleSelectConversation = async (conversation) => {
-    console.log('=== Selecting conversation:', conversation);
+    // console.log('=== Selecting conversation:', conversation);
     setSelectedConversation(conversation);
 
-    // Messages are already loaded in the main useEffect, so we don't need to reload them here
-    // This prevents duplicate API calls
+    // Load messages for this conversation
+    if (conversation && conversation.conversationId) {
+      try {
+        setIsLoadingMessages(true);
+        // console.log('Loading messages for selected conversation:', conversation.conversationId);
+        const response = await apiService.messages.getMessages(conversation.conversationId);
+        const loadedMessages = response.data?.data || [];
+
+        // console.log('Loaded messages for conversation:', loadedMessages);
+
+        // Store raw messages temporarily - they'll be processed by the profile useEffect
+        setMessages(loadedMessages.map(msg => ({ ...msg, isOwn: false }))); // Temporary, will be fixed by profile useEffect
+
+      } catch (error) {
+        console.error('Error loading messages for conversation:', error);
+        setMessages([]);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    } else {
+      setMessages([]);
+      setIsLoadingMessages(false);
+    }
   };
 
   const handleBackToConversations = () => {
@@ -219,11 +278,6 @@ const MessagingPage = () => {
         setMessages(prev => [...prev, optimisticMessage]);
         setNewMessage('');
 
-        // Scroll to bottom
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-
         // Send to server
         const messageData = {
           recipientId: selectedConversation.otherUser._id,
@@ -231,9 +285,9 @@ const MessagingPage = () => {
           type: 'text'
         };
 
-        console.log('Sending message to server:', messageData);
+        // console.log('Sending message to server:', messageData);
         const response = await apiService.messages.sendMessage(messageData);
-        console.log('Message sent successfully:', response);
+        // console.log('Message sent successfully:', response);
 
       } catch (error) {
         console.error('Error sending message:', error);
@@ -246,13 +300,13 @@ const MessagingPage = () => {
   };
 
   // Filter conversations based on search query
-  const filteredConversations = selectedConversation ? [selectedConversation] : [];
+  // const filteredConversations = selectedConversation ? [selectedConversation] : [];
 
   // Debug logging
-  console.log('=== MessagingPage Render ===');
-  console.log('Selected conversation:', selectedConversation);
-  console.log('Messages:', messages);
-  console.log('Is mobile:', isMobile);
+  // console.log('=== MessagingPage Render ===');
+  // console.log('Selected conversation:', selectedConversation);
+  // console.log('Messages:', messages);
+  // console.log('Is mobile:', isMobile);
 
   return (
     <div className="container mx-auto px-4 py-6 min-h-screen">
@@ -314,7 +368,11 @@ const MessagingPage = () => {
                     <div className="h-full flex flex-col">
                       {/* Messages Area */}
                       <div className="flex-1 p-4 overflow-y-auto max-h-[calc(100vh-300px)]">
-                        {messages.length === 0 ? (
+                        {isLoadingMessages ? (
+                          <div className="flex items-center justify-center h-full">
+                            <LoadingSpinner size="md" />
+                          </div>
+                        ) : messages.length === 0 ? (
                           <div className="text-center text-secondary-500 dark:text-secondary-400">
                             <p>Start your conversation with {selectedConversation.otherUser.firstName}</p>
                           </div>
@@ -378,29 +436,40 @@ const MessagingPage = () => {
             ) : (
               // Conversation List
               <div className="h-full">
-                {selectedConversation ? (
+                {isLoadingConversations ? (
+                  <div className="flex items-center justify-center h-full">
+                    <LoadingSpinner size="md" />
+                  </div>
+                ) : conversations.length > 0 ? (
                   <div className="p-4">
                     <div className="space-y-2">
-                      <div
-                        className="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 cursor-pointer"
-                        onClick={() => handleSelectConversation(selectedConversation)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full bg-secondary-200 dark:bg-secondary-700 flex items-center justify-center">
-                            <span className="text-sm font-medium text-secondary-600 dark:text-secondary-400">
-                              {selectedConversation.otherUser.firstName?.[0] || 'U'}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-secondary-900 dark:text-secondary-100 truncate">
-                              {selectedConversation.otherUser.firstName} {selectedConversation.otherUser.lastName}
-                            </h4>
-                            <p className="text-sm text-secondary-600 dark:text-secondary-400 truncate">
-                              {selectedConversation.lastMessage.content}
-                            </p>
+                      {conversations.map((conversation) => (
+                        <div
+                          key={conversation._id || conversation.conversationId}
+                          className={`p-3 rounded-lg border cursor-pointer ${
+                            selectedConversation?._id === conversation._id || selectedConversation?.conversationId === conversation.conversationId
+                              ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800'
+                              : 'hover:bg-secondary-50 dark:hover:bg-secondary-800 border-secondary-200 dark:border-secondary-700'
+                          }`}
+                          onClick={() => handleSelectConversation(conversation)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-full bg-secondary-200 dark:bg-secondary-700 flex items-center justify-center">
+                              <span className="text-sm font-medium text-secondary-600 dark:text-secondary-400">
+                                {conversation.otherUser.firstName?.[0] || 'U'}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-secondary-900 dark:text-secondary-100 truncate">
+                                {conversation.otherUser.firstName} {conversation.otherUser.lastName}
+                              </h4>
+                              <p className="text-sm text-secondary-600 dark:text-secondary-400 truncate">
+                                {conversation.lastMessage?.content || 'No messages yet'}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 ) : (
@@ -425,28 +494,39 @@ const MessagingPage = () => {
                   </Card.Description>
                 </Card.Header>
                 <Card.Content className="h-full overflow-y-auto">
-                  {selectedConversation ? (
+                  {isLoadingConversations ? (
+                    <div className="flex items-center justify-center h-full">
+                      <LoadingSpinner size="md" />
+                    </div>
+                  ) : conversations.length > 0 ? (
                     <div className="space-y-2">
-                      <div
-                        className="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 cursor-pointer"
-                        onClick={() => handleSelectConversation(selectedConversation)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full bg-secondary-200 dark:bg-secondary-700 flex items-center justify-center">
-                            <span className="text-sm font-medium text-secondary-600 dark:text-secondary-400">
-                              {selectedConversation.otherUser.firstName?.[0] || 'U'}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-secondary-900 dark:text-secondary-100 truncate">
-                              {selectedConversation.otherUser.firstName} {selectedConversation.otherUser.lastName}
-                            </h4>
-                            <p className="text-sm text-secondary-600 dark:text-secondary-400 truncate">
-                              {selectedConversation.lastMessage.content}
-                            </p>
+                      {conversations.map((conversation) => (
+                        <div
+                          key={conversation._id || conversation.conversationId}
+                          className={`p-3 rounded-lg border cursor-pointer ${
+                            selectedConversation?._id === conversation._id || selectedConversation?.conversationId === conversation.conversationId
+                              ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800'
+                              : 'hover:bg-secondary-50 dark:hover:bg-secondary-800 border-secondary-200 dark:border-secondary-700'
+                          }`}
+                          onClick={() => handleSelectConversation(conversation)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-full bg-secondary-200 dark:bg-secondary-700 flex items-center justify-center">
+                              <span className="text-sm font-medium text-secondary-600 dark:text-secondary-400">
+                                {conversation.otherUser.firstName?.[0] || 'U'}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-secondary-900 dark:text-secondary-100 truncate">
+                                {conversation.otherUser.firstName} {conversation.otherUser.lastName}
+                              </h4>
+                              <p className="text-sm text-secondary-600 dark:text-secondary-400 truncate">
+                                {conversation.lastMessage?.content || 'No messages yet'}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
                   ) : (
                     <ConversationList
@@ -493,7 +573,11 @@ const MessagingPage = () => {
                         <div className="h-full flex flex-col">
                           {/* Messages Area */}
                           <div className="flex-1 p-4 overflow-y-auto max-h-[calc(100vh-400px)]">
-                            {messages.length === 0 ? (
+                            {isLoadingMessages ? (
+                              <div className="flex items-center justify-center h-full">
+                                <LoadingSpinner size="md" />
+                              </div>
+                            ) : messages.length === 0 ? (
                               <div className="text-center text-secondary-500 dark:text-secondary-400">
                                 <p>Start your conversation with {selectedConversation.otherUser.firstName}</p>
                               </div>
