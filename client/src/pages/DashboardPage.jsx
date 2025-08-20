@@ -22,12 +22,12 @@ const DashboardPage = () => {
   const { getToken } = useClerkAuth();
 
   // Fetch user's jobs
-  const { data: myJobsData = [], isLoading: jobsLoading } = useQuery({
+  const { data: myJobsData = [], isLoading: jobsLoading, error: jobsError } = useQuery({
     queryKey: ['my-jobs'],
     queryFn: async () => {
       try {
         const response = await apiService.jobs.myJobs();
-        const jobs = response.data || response || [];
+        const jobs = response.data?.data || response.data || response || [];
         // Ensure we always return an array
         return Array.isArray(jobs) ? jobs : [];
       } catch (error) {
@@ -41,29 +41,52 @@ const DashboardPage = () => {
   // Ensure myJobs is always an array
   const myJobs = Array.isArray(myJobsData) ? myJobsData : [];
 
-  // Fetch user stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['user-stats'],
-    queryFn: async () => {
-      try {
-        const response = await apiService.auth.getStats();
-        const statsData = response.data || response || {};
-        return {
-          jobsPosted: statsData.jobsPosted || 0,
-          jobsCompleted: statsData.jobsCompleted || 0,
-          totalEarnings: statsData.totalEarnings || 0
-        };
-      } catch (error) {
-        console.error('Failed to fetch user stats:', error);
-        return {
-          jobsPosted: 0,
-          jobsCompleted: 0,
-          totalEarnings: 0
-        };
-      }
-    },
-    enabled: !!user
-  });
+  // Debug logging (commented out)
+  // console.log('Dashboard - user:', user);
+  // console.log('Dashboard - jobsError:', jobsError);
+  // console.log('Dashboard - myJobsData:', myJobsData);
+  // console.log('Dashboard - myJobs:', myJobs);
+
+  // Calculate stats from available data
+  const stats = React.useMemo(() => {
+    if (!myJobs || myJobs.length === 0) {
+      return {
+        jobsPosted: 0,
+        jobsCompleted: 0,
+        jobsInProgress: 0,
+        jobsOpen: 0,
+        totalEarnings: 0,
+        averageJobValue: 0
+      };
+    }
+
+    const jobsPosted = myJobs.length;
+    const jobsCompleted = myJobs.filter(job => job.status === 'completed').length;
+    const jobsInProgress = myJobs.filter(job => job.status === 'in_progress' || job.status === 'accepted').length;
+    const jobsOpen = myJobs.filter(job => job.status === 'open').length;
+
+    const totalEarnings = myJobs
+      .filter(job => job.status === 'completed')
+      .reduce((total, job) => total + (job.budget || 0), 0);
+
+    const totalBudget = myJobs.reduce((total, job) => {
+      const budget = job.budget || job.minBudget || 0;
+      return total + (typeof budget === 'number' ? budget : 0);
+    }, 0);
+
+    const averageJobValue = jobsPosted > 0 && totalBudget > 0
+      ? totalBudget / jobsPosted
+      : 0;
+
+    return {
+      jobsPosted,
+      jobsCompleted,
+      jobsInProgress,
+      jobsOpen,
+      totalEarnings,
+      averageJobValue
+    };
+  }, [myJobs]);
 
   // Fetch recent notifications
   const { data: notifications = [], isLoading: notificationsLoading } = useQuery({
@@ -108,7 +131,7 @@ const DashboardPage = () => {
     }
   };
 
-  if (jobsLoading || statsLoading) {
+  if (jobsLoading || notificationsLoading) {
     return (
       <div className="min-h-screen bg-secondary-50 dark:bg-secondary-900 flex items-center justify-center">
         <LoadingSpinner />
@@ -137,9 +160,9 @@ const DashboardPage = () => {
                 <Briefcase className="w-6 h-6 text-primary-600 dark:text-primary-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">Total Jobs</p>
+                <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">Jobs Posted</p>
                 <p className="text-2xl font-bold text-secondary-900 dark:text-secondary-100">
-                  {stats?.jobsPosted || 0}
+                  {stats.jobsPosted}
                 </p>
               </div>
             </div>
@@ -151,9 +174,9 @@ const DashboardPage = () => {
                 <CheckCircle className="w-6 h-6 text-success-600 dark:text-success-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">Completed</p>
+                <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">Jobs Completed</p>
                 <p className="text-2xl font-bold text-secondary-900 dark:text-secondary-100">
-                  {stats?.jobsCompleted || 0}
+                  {stats.jobsCompleted}
                 </p>
               </div>
             </div>
@@ -162,12 +185,12 @@ const DashboardPage = () => {
           <div className="bg-white dark:bg-secondary-800 rounded-lg shadow-sm border border-secondary-200 dark:border-secondary-700 p-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-warning-100 dark:bg-warning-900 rounded-lg flex items-center justify-center">
-                <Star className="w-6 h-6 text-warning-600 dark:text-warning-400" />
+                <Clock className="w-6 h-6 text-warning-600 dark:text-warning-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">Rating</p>
+                <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">Active Jobs</p>
                 <p className="text-2xl font-bold text-secondary-900 dark:text-secondary-100">
-                  {user?.rating?.average?.toFixed(1) || '0.0'}
+                  {stats.jobsInProgress + stats.jobsOpen}
                 </p>
               </div>
             </div>
@@ -179,14 +202,43 @@ const DashboardPage = () => {
                 <DollarSign className="w-6 h-6 text-error-600 dark:text-error-400" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">Earnings</p>
+                <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">Total Earnings</p>
                 <p className="text-2xl font-bold text-secondary-900 dark:text-secondary-100">
-                  ${stats?.totalEarnings || 0}
+                  ${stats.totalEarnings.toLocaleString()}
                 </p>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Quick Stats Summary */}
+        {myJobs.length > 0 && (
+          <div className="bg-white dark:bg-secondary-800 rounded-lg shadow-sm border border-secondary-200 dark:border-secondary-700 p-6 mb-8">
+            <h3 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100 mb-4">
+              Job Status Breakdown
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.jobsOpen}</p>
+                <p className="text-sm text-secondary-600 dark:text-secondary-400">Open</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.jobsInProgress}</p>
+                <p className="text-sm text-secondary-600 dark:text-secondary-400">In Progress</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.jobsCompleted}</p>
+                <p className="text-sm text-secondary-600 dark:text-secondary-400">Completed</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  ${stats.averageJobValue.toFixed(0)}
+                </p>
+                <p className="text-sm text-secondary-600 dark:text-secondary-400">Avg. Value</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* My Jobs */}
