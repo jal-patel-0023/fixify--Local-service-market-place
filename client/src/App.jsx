@@ -18,6 +18,7 @@ import BrowsePage from './pages/BrowsePage';
 import JobDetailPage from './pages/JobDetailPage';
 import PostJobPage from './pages/PostJobPage';
 import DashboardPage from './pages/DashboardPage';
+import MyJobsPage from './pages/MyJobsPage';
 import ProfilePage from './pages/ProfilePage';
 import AuthPage from './pages/AuthPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -95,6 +96,14 @@ function AppContent() {
             element={
               <SignedIn>
                 <DashboardPage />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/my-jobs"
+            element={
+              <SignedIn>
+                <MyJobsPage />
               </SignedIn>
             }
           />

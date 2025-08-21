@@ -126,6 +126,11 @@ const jobSchema = new mongoose.Schema({
     verifiedOnly: {
       type: Boolean,
       default: false
+    },
+    notes: {
+      type: String,
+      trim: true,
+      maxlength: 500
     }
   },
   

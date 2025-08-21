@@ -14,6 +14,7 @@ const Header = () => {
   const navigation = [
     { name: 'Browse Jobs', href: '/browse' },
     { name: 'Post Job', href: '/post-job' },
+    { name: 'My Jobs', href: '/my-jobs' },
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Messages', href: '/messages' },
   ];

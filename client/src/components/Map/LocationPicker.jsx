@@ -12,6 +12,16 @@ const LocationPicker = ({
   className = '',
   ...props
 }) => {
+  // Helper function to format address consistently
+  const formatAddress = (address) => {
+    if (typeof address === 'string') {
+      return address;
+    } else if (typeof address === 'object' && address.street) {
+      const { street, city, state, zipCode, country } = address;
+      return `${street}, ${city}, ${state} ${zipCode}, ${country}`;
+    }
+    return '';
+  };
   const [address, setAddress] = useState('');
   const [coordinates, setCoordinates] = useState(value);
   const [isSearching, setIsSearching] = useState(false);
@@ -22,7 +32,7 @@ const LocationPicker = ({
     if (value) {
       setCoordinates(value);
       if (value.address) {
-        setAddress(value.address);
+        setAddress(formatAddress(value.address));
       }
     }
   }, [value]);
@@ -170,7 +180,7 @@ const LocationPicker = ({
             <span className="font-medium">Selected Location:</span>
           </div>
           <p className="text-sm text-secondary-600 dark:text-secondary-400 mt-1">
-            {address || `${coordinates.lat.toFixed(6)}, ${coordinates.lng.toFixed(6)}`}
+            {typeof address === 'string' ? address : `${coordinates.lat.toFixed(6)}, ${coordinates.lng.toFixed(6)}`}
           </p>
         </div>
       )}

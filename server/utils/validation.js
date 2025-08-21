@@ -87,6 +87,12 @@ const jobValidationRules = {
     body('preferredTime.end').notEmpty().withMessage('End time is required'),
     body('requirements.experience').optional().isIn(['any', 'beginner', 'intermediate', 'expert'])
       .withMessage('Invalid experience requirement'),
+    body('requirements.skills').optional().isArray().withMessage('Skills must be an array'),
+    body('requirements.skills.*').optional().isIn([
+      'plumbing', 'electrical', 'carpentry', 'cleaning', 
+      'gardening', 'painting', 'moving', 'repair', 'other'
+    ]).withMessage('Invalid skill in requirements'),
+    body('requirements.verifiedOnly').optional().isBoolean().withMessage('verifiedOnly must be true or false'),
     body('maxDistance').optional().isInt({ min: 1, max: 100 })
       .withMessage('Max distance must be between 1 and 100 miles'),
     body('contactPreference').optional().isIn(['message', 'phone', 'email'])
@@ -108,6 +114,14 @@ const jobValidationRules = {
       .withMessage('Maximum budget must be at least $1'),
     body('preferredDate').optional().isISO8601()
       .withMessage('Valid preferred date is required'),
+    body('requirements.experience').optional().isIn(['any', 'beginner', 'intermediate', 'expert'])
+      .withMessage('Invalid experience requirement'),
+    body('requirements.skills').optional().isArray().withMessage('Skills must be an array'),
+    body('requirements.skills.*').optional().isIn([
+      'plumbing', 'electrical', 'carpentry', 'cleaning', 
+      'gardening', 'painting', 'moving', 'repair', 'other'
+    ]).withMessage('Invalid skill in requirements'),
+    body('requirements.verifiedOnly').optional().isBoolean().withMessage('verifiedOnly must be true or false'),
     body('maxDistance').optional().isInt({ min: 1, max: 100 })
       .withMessage('Max distance must be between 1 and 100 miles')
   ]

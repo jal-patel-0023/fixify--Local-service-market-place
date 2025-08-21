@@ -340,16 +340,16 @@ const DashboardPage = () => {
                       </Link>
                     ))}
 
-                    {myJobs.length > 5 && (
-                      <div className="text-center pt-4">
-                        <Link
-                          to="/browse"
-                          className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium"
-                        >
-                          View all jobs →
-                        </Link>
-                      </div>
-                    )}
+                    <div className="text-center pt-4">
+                      <Link
+                        to="/my-jobs"
+                        className="inline-flex items-center px-4 py-2 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all duration-200 border border-primary-200 dark:border-primary-700/30"
+                      >
+                        <span className="mr-2">📋</span>
+                        View all my jobs
+                        <span className="ml-2">→</span>
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
