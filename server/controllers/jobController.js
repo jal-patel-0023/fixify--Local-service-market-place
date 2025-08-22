@@ -112,10 +112,10 @@ const createJob = async (req, res) => {
         }))
       });
     } else {
-      res.status(500).json({
-        error: 'Failed to create job',
-        message: 'Internal server error'
-      });
+    res.status(500).json({
+      error: 'Failed to create job',
+      message: 'Internal server error'
+    });
     }
   }
 };
@@ -199,8 +199,8 @@ const getJob = async (req, res) => {
     let job;
     try {
       job = await Job.findById(req.params.id)
-        .populate('creator', 'firstName lastName profileImage rating')
-        .populate('assignedTo', 'firstName lastName profileImage rating');
+      .populate('creator', 'firstName lastName profileImage rating')
+      .populate('assignedTo', 'firstName lastName profileImage rating');
     } catch (populateError) {
       console.error('Population failed, trying without population:', populateError);
       
@@ -268,7 +268,7 @@ const getJob = async (req, res) => {
     // Try to increment view count (but don't fail if it doesn't work)
     try {
       if (job._id) {
-        await Job.findByIdAndUpdate(job._id, { $inc: { views: 1 } });
+        await Job.findByIdAndUpdate(job._id, { $inc: { 'stats.views': 1 } });
       }
     } catch (incrementError) {
       console.error('Failed to increment views:', incrementError);
@@ -471,10 +471,10 @@ const updateJob = async (req, res) => {
     let job;
     try {
       job = await Job.findByIdAndUpdate(
-        req.params.id,
-        updateData,
+      req.params.id,
+      updateData,
         { new: true, runValidators: false } // Disable validators to prevent errors
-      ).populate('creator', 'firstName lastName profileImage');
+    ).populate('creator', 'firstName lastName profileImage');
     } catch (updateError) {
       console.error('Update failed, trying to fix data:', updateError);
       
