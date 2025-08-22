@@ -23,32 +23,36 @@ const NotificationToast = () => {
   };
 
   const getNotificationStyle = (type, priority) => {
-    if (priority === 'high') return 'border-l-4 border-l-red-500 bg-red-50 dark:bg-red-900/20';
-    if (type === 'urgent') return 'border-l-4 border-l-orange-500 bg-orange-50 dark:bg-orange-900/20';
-    return 'border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/20';
+    // Use fully opaque backgrounds for better readability
+    if (priority === 'high') return 'border-l-4 border-l-red-500 bg-red-500 text-white dark:bg-red-700 dark:text-white';
+    if (type === 'urgent') return 'border-l-4 border-l-orange-500 bg-orange-400 text-white dark:bg-orange-600 dark:text-white';
+    return 'border-l-4 border-l-blue-500 bg-blue-500 text-white dark:bg-blue-700 dark:text-white';
   };
 
   useEffect(() => {
+    // Track shown notifications to avoid duplicates
+    const shown = new Set();
     if (notifications?.length > 0) {
       notifications.forEach((notification) => {
-        // Only show toast for high priority or urgent notifications
-        if (notification.priority === 'high' || notification.type === 'urgent') {
+        const key = `${notification.title}|${notification.message}`;
+        if ((notification.priority === 'high' || notification.type === 'urgent') && !shown.has(key)) {
+          shown.add(key);
           toast.custom(
             (t) => (
               <div className={`${getNotificationStyle(notification.type, notification.priority)} p-4 rounded-lg shadow-lg max-w-sm w-full`}>
                 <div className="flex items-start gap-3">
                   {getNotificationIcon(notification.type, notification.priority)}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-gray-900 dark:text-white text-sm mb-1">
+                    <h4 className="font-medium text-white dark:text-white text-sm mb-1">
                       {notification.title}
                     </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-white dark:text-gray-100">
                       {notification.message}
                     </p>
                   </div>
                   <button
                     onClick={() => toast.dismiss(t.id)}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="text-white hover:text-gray-200 dark:hover:text-gray-300"
                   >
                     <X size={16} />
                   </button>

@@ -749,19 +749,13 @@ const JobDetailPage = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                      {job.stats.applications || 0}
-                    </div>
-                    <div className="text-sm text-secondary-600 dark:text-secondary-400">Applications</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                       {job.stats.savedBy?.length || 0}
                     </div>
                     <div className="text-sm text-secondary-600 dark:text-secondary-400">Saved</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                      {job.maxDistance || 25}
+                      {job.maxDistance || 0}
                     </div>
                     <div className="text-sm text-secondary-600 dark:text-secondary-400">Max Distance (mi)</div>
                   </div>

@@ -203,10 +203,15 @@ function App() {
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: 'var(--toast-bg)',
-                  color: 'var(--toast-color)',
-                  border: '1px solid var(--toast-border)',
+                  background: '#fff',
+                  color: '#222',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  fontWeight: 500,
+                  fontSize: '1rem',
+                  opacity: 1,
                 },
+                className: 'dark:bg-blue-900 dark:text-white',
               }}
             />
           </ThemeProvider>

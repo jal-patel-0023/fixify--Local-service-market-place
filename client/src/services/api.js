@@ -38,6 +38,7 @@ api.interceptors.request.use(
 );
 
 // Response interceptor for error handling
+let hasShownLoginToast = false;
 api.interceptors.response.use(
   (response) => {
     return response;
@@ -51,7 +52,10 @@ api.interceptors.response.use(
       switch (status) {
         case 401:
           // Unauthorized - redirect to login
-          toast.error('Please log in to continue');
+          if (!hasShownLoginToast) {
+            toast.error('Please log in to continue');
+            hasShownLoginToast = true;
+          }
           break;
         case 403:
           // Forbidden
