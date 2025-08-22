@@ -700,6 +700,12 @@ const JobDetailPage = () => {
                         <Map className="w-4 h-4 mr-2" />
                         Location Map
                       </h3>
+                      {(() => {
+                        const coords = job.location?.coordinates;
+                        const marker = coords && coords.length === 2 ? [{ lat: coords[1], lng: coords[0], title: job.title }] : [];
+                        console.log('JobDetailPage Map markers:', coords, marker);
+                        return null;
+                      })()}
                       <MapComponent
                         center={{ lat: job.location.coordinates[1], lng: job.location.coordinates[0] }}
                         zoom={15}
@@ -707,6 +713,14 @@ const JobDetailPage = () => {
                         height="250px"
                         className="rounded-lg border border-secondary-200 dark:border-secondary-700"
                       />
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${job.location.coordinates[1]},${job.location.coordinates[0]}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 mt-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                      >
+                        Get Directions
+                      </a>
                     </div>
                   ) : (
                     <div className="text-secondary-500 dark:text-secondary-400 text-center py-8">
