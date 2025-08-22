@@ -356,51 +356,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Recent Activity */}
           <div>
-            <div className="bg-white dark:bg-secondary-800 rounded-lg shadow-sm border border-secondary-200 dark:border-secondary-700">
-              <div className="p-6 border-b border-secondary-200 dark:border-secondary-700">
-                <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100">
-                  Recent Activity
-                </h2>
-              </div>
-
-              <div className="p-6">
-                {notificationsLoading ? (
-                  <div className="flex justify-center py-4">
-                    <LoadingSpinner size="sm" />
-                  </div>
-                ) : notifications.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Users className="w-8 h-8 text-secondary-400 mx-auto mb-2" />
-                    <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                      No recent activity
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {notifications.map((notification) => (
-                      <div key={notification._id} className="flex items-start space-x-3">
-                        <div className="w-2 h-2 bg-primary-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-secondary-900 dark:text-secondary-100">
-                            {notification.title}
-                          </p>
-                          <p className="text-xs text-secondary-600 dark:text-secondary-400 mt-1">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-secondary-500 dark:text-secondary-400 mt-1">
-                            {formatDate(notification.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
             <div className="bg-white dark:bg-secondary-800 rounded-lg shadow-sm border border-secondary-200 dark:border-secondary-700 mt-6">
               <div className="p-6 border-b border-secondary-200 dark:border-secondary-700">
                 <h2 className="text-lg font-semibold text-secondary-900 dark:text-secondary-100">
@@ -430,12 +386,22 @@ const DashboardPage = () => {
                 </Link>
 
                 <Link
-                  to="/profile"
+                  to="/saved-jobs"
                   className="flex items-center p-3 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
                 >
-                  <Users className="w-5 h-5 text-primary-600 dark:text-primary-400 mr-3" />
+                  <Bookmark className="w-5 h-5 text-primary-600 dark:text-primary-400 mr-3" />
                   <span className="text-sm font-medium text-secondary-900 dark:text-secondary-100">
-                    Edit Profile
+                    Saved Jobs
+                  </span>
+                </Link>
+
+                <Link
+                  to="/my-jobs"
+                  className="flex items-center p-3 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                >
+                  <span className="mr-2">📋</span>
+                  <span className="text-sm font-medium text-secondary-900 dark:text-secondary-100">
+                  View all my jobs
                   </span>
                 </Link>
               </div>
