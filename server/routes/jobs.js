@@ -26,10 +26,13 @@ router.get('/categories', (req, res) => {
   res.json({ success: true, data: categories });
 });
 
+// Public job detail route (must be before protected routes)
+router.get('/:id', optionalAuth, jobController.getJob);
+
 // Protected routes (authentication required)
 router.use('/', authenticateUser, validateSession);
 
-// User-specific job lists (must be before /:id route)
+// User-specific job lists
 router.get('/my-jobs', jobController.getMyJobs);
 router.get('/accepted-jobs', jobController.getAcceptedJobs);
 router.get('/saved', jobController.getSavedJobs);
@@ -59,11 +62,6 @@ router.post('/:id/complete', jobController.completeJob);
 router.post('/:id/cancel', jobController.cancelJob);
 router.post('/:id/reopen', jobController.reopenJob);
 router.post('/:id/save', jobController.toggleJobSave);
-
-// Public job detail route (must be last among GET routes)
-router.get('/:id', optionalAuth, jobController.getJob);
-
-
 
 // Job statistics endpoint
 router.get('/stats/overview', async (req, res) => {

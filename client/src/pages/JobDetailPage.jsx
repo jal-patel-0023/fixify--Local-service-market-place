@@ -45,7 +45,7 @@ const JobDetailPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, profile } = useAuth();
-  const { getToken } = useClerkAuth();
+  const { getToken, isSignedIn } = useClerkAuth();
 
   // Modal states
   const [confirmModal, setConfirmModal] = React.useState({
@@ -72,13 +72,20 @@ const JobDetailPage = () => {
       console.log('Fetching job details for ID:', id);
 
       try {
-        const token = await getToken();
         const headers = {
           'Content-Type': 'application/json'
         };
 
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
+        // Only try to get token if user is signed in
+        if (isSignedIn) {
+          try {
+            const token = await getToken();
+            if (token) {
+              headers.Authorization = `Bearer ${token}`;
+            }
+          } catch (tokenError) {
+            console.log('Token not available, proceeding without authentication');
+          }
         }
 
         const response = await fetch(`http://localhost:5000/api/jobs/${id}`, {
