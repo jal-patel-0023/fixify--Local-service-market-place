@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { MapPin, Clock, DollarSign, User, Filter, Search } from 'lucide-react';
+import { MapPin, Clock, DollarSign, User, Filter, Search, MessageCircle, Bookmark } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { apiService } from '../services/api';
+import AuthPrompt from '../components/Auth/AuthPrompt';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 const BrowsePage = () => {
@@ -237,14 +238,41 @@ const BrowsePage = () => {
                   )}
                 </div>
 
-                {/* Category Tag */}
+                {/* Category Tag and Actions */}
                 <div className="flex justify-between items-center">
                   <span className="px-3 py-1 bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 rounded-full text-xs font-medium">
                     {job.category}
                   </span>
-                  <span className="text-xs text-secondary-500 dark:text-secondary-400">
-                    {formatDate(job.createdAt)}
-                  </span>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-secondary-500 dark:text-secondary-400">
+                      {formatDate(job.createdAt)}
+                    </span>
+                    
+                    {/* Action buttons for logged-in users */}
+                    {profile?.data?.data?._id && job.creator?._id !== profile.data.data._id && (
+                      <>
+                        <AuthPrompt requireAuth={true} promptMessage="Please sign in to save this job">
+                          <button
+                            className="p-1 text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                            title="Save job"
+                          >
+                            <Bookmark className="w-4 h-4" />
+                          </button>
+                        </AuthPrompt>
+                        
+                        <AuthPrompt requireAuth={true} promptMessage="Please sign in to message the job creator">
+                          <Link
+                            to={`/messages?user=${job.creator._id}`}
+                            className="p-1 text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                            title="Message creator"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </Link>
+                        </AuthPrompt>
+                      </>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}

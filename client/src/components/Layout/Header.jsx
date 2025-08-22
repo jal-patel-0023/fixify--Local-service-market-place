@@ -4,6 +4,7 @@ import { UserButton, SignedIn, SignedOut, SignInButton } from '@clerk/clerk-reac
 import { Menu, X, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../Providers/ThemeProvider';
 import { useAuth } from '../../hooks/useAuth';
+import AuthPrompt from '../Auth/AuthPrompt';
 import Button from '../UI/Button';
 
 const Header = () => {
@@ -12,21 +13,16 @@ const Header = () => {
   const { user } = useAuth();
 
   const navigation = [
-    { name: 'Browse Jobs', href: '/browse' },
-    { name: 'Post Job', href: '/post-job' },
-    { name: 'My Jobs', href: '/my-jobs' },
-    { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Messages', href: '/messages' },
+    { name: 'Browse Jobs', href: '/browse', public: true },
+    { name: 'Post Job', href: '/post-job', public: false },
+    { name: 'My Jobs', href: '/my-jobs', public: false },
+    { name: 'Dashboard', href: '/dashboard', public: false },
+    { name: 'Messages', href: '/messages', public: false },
   ];
 
   // Add admin link for admin users
   if (user?.isAdmin) {
-    navigation.push({ name: 'Admin', href: '/admin' });
-  }
-
-  // Add admin link for admin users
-  if (user?.isAdmin) {
-    navigation.push({ name: 'Admin', href: '/admin' });
+    navigation.push({ name: 'Admin', href: '/admin', public: false });
   }
 
   return (
@@ -48,13 +44,18 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
             {navigation.map((item) => (
-              <Link
+              <AuthPrompt
                 key={item.name}
-                to={item.href}
-                className="text-secondary-600 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-secondary-100 transition-colors"
+                requireAuth={!item.public}
+                promptMessage={`Please sign in to access ${item.name}`}
               >
-                {item.name}
-              </Link>
+                <Link
+                  to={item.href}
+                  className="text-secondary-600 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-secondary-100 transition-colors"
+                >
+                  {item.name}
+                </Link>
+              </AuthPrompt>
             ))}
           </nav>
 
@@ -107,14 +108,19 @@ const Header = () => {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 border-t border-secondary-200 dark:border-secondary-700">
               {navigation.map((item) => (
-                <Link
+                <AuthPrompt
                   key={item.name}
-                  to={item.href}
-                  className="block px-3 py-2 text-base font-medium text-secondary-600 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-secondary-100"
-                  onClick={() => setMobileMenuOpen(false)}
+                  requireAuth={!item.public}
+                  promptMessage={`Please sign in to access ${item.name}`}
                 >
-                  {item.name}
-                </Link>
+                  <Link
+                    to={item.href}
+                    className="block px-3 py-2 text-base font-medium text-secondary-600 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-secondary-100"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                </AuthPrompt>
               ))}
             </div>
           </div>

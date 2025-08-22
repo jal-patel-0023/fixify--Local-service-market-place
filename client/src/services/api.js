@@ -8,6 +8,35 @@ export const registerAuthTokenGetter = (getter) => {
   authTokenGetter = getter;
 };
 
+// Define public endpoints that don't require authentication
+const PUBLIC_ENDPOINTS = [
+  '/api/jobs', // GET jobs list
+  '/api/jobs/', // GET job details (with ID)
+  '/api/browse/jobs',
+  '/api/browse/recommendations',
+  '/api/browse/trending',
+  '/api/browse/category',
+  '/api/browse/search',
+  '/api/browse/filters',
+  '/api/browse/stats',
+  '/api/browse/map',
+  '/api/browse/nearby',
+  '/api/browse/urgent',
+  '/api/health',
+];
+
+// Helper function to check if an endpoint is public
+const isPublicEndpoint = (url) => {
+  const path = url.replace(config.apiUrl, '');
+  return PUBLIC_ENDPOINTS.some(endpoint => {
+    // Handle dynamic routes like /api/jobs/:id
+    if (endpoint.endsWith('/')) {
+      return path.startsWith(endpoint);
+    }
+    return path === endpoint || path.startsWith(endpoint + '/');
+  });
+};
+
 // Create axios instance
 const api = axios.create({
   baseURL: config.apiUrl,
@@ -44,15 +73,15 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    const { response } = error;
+    const { response, config } = error;
     
     if (response) {
       const { status, data } = response;
       
       switch (status) {
         case 401:
-          // Unauthorized - redirect to login
-          if (!hasShownLoginToast) {
+          // Only show login toast for protected endpoints
+          if (!isPublicEndpoint(config.url) && !hasShownLoginToast) {
             toast.error('Please log in to continue');
             hasShownLoginToast = true;
           }

@@ -11,6 +11,7 @@ import Layout from './components/Layout/Layout';
 import ThemeProvider from './components/Providers/ThemeProvider';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import ErrorFallback from './components/UI/ErrorFallback';
+import AuthGuard from './components/Auth/AuthGuard';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -64,6 +65,7 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const { isLoaded, getToken } = useAuth();
+  
   // Register token getter once
   useEffect(() => {
     registerAuthTokenGetter(() => getToken());
@@ -75,6 +77,15 @@ function AppContent() {
 
   return (
     <Router>
+      <AppRoutes />
+    </Router>
+  );
+}
+
+// Separate component to use useAuthGuard inside Router context
+function AppRoutes() {
+  return (
+    <AuthGuard>
       <Layout>
         <Routes>
           {/* Public Routes */}
@@ -184,10 +195,11 @@ function AppContent() {
           />
           
           {/* 404 Route */}
+          <Route path="/404" element={<NotFoundPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Layout>
-    </Router>
+    </AuthGuard>
   );
 }
 

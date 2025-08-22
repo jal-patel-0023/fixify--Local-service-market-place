@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '../UI/Badge';
 import { Button } from '../UI/Button';
+import AuthPrompt from '../Auth/AuthPrompt';
 
 const MobileJobCard = ({ job, onSave, onShare }) => {
   const navigate = useNavigate();
@@ -84,83 +85,68 @@ const MobileJobCard = ({ job, onSave, onShare }) => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
             {job.title}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-            {job.description}
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant={getStatusColor(job.status)} size="sm">
+              {job.status.replace('_', ' ').toUpperCase()}
+            </Badge>
+            {job.isUrgent && (
+              <Badge variant="error" size="sm">
+                URGENT
+              </Badge>
+            )}
+          </div>
         </div>
         
-        <div className="flex items-center gap-2 ml-3">
-          <Badge variant={getStatusColor(job.status)} size="sm">
-            {job.status}
-          </Badge>
-          {job.urgency === 'urgent' && (
-            <Badge variant="error" size="sm">
-              Urgent
-            </Badge>
+        <div className="text-right ml-3">
+          <div className="text-lg font-bold text-green-600 dark:text-green-400">
+            {formatBudget(job.budget?.min || job.budget?.max || 0)}
+          </div>
+          {job.budget?.isNegotiable && (
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Negotiable
+            </div>
           )}
         </div>
       </div>
 
-      {/* Budget and Location */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <DollarSign className="h-4 w-4 text-green-600" />
-            <span className="font-semibold text-green-600">
-              {formatBudget(job.budget)}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <MapPin className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
-              {job.location?.address || 'Location not specified'}
-            </span>
-          </div>
+      {/* Description */}
+      <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">
+        {job.description}
+      </p>
+
+      {/* Details */}
+      <div className="space-y-2 mb-3">
+        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+          <MapPin className="w-4 h-4 mr-2" />
+          <span className="truncate">
+            {job.location?.address?.city}, {job.location?.address?.state}
+          </span>
         </div>
         
-        <div className="flex items-center gap-1">
-          <Clock className="h-4 w-4 text-gray-500" />
-          <span className="text-sm text-gray-500">
-            {formatTimeAgo(job.createdAt)}
-          </span>
+        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+          <Clock className="w-4 h-4 mr-2" />
+          <span>{formatTimeAgo(job.createdAt)}</span>
         </div>
       </div>
 
       {/* Creator Info */}
       {job.creator && (
-        <div className="flex items-center justify-between mb-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-              {job.creator.avatar ? (
-                <img 
-                  src={job.creator.avatar} 
-                  alt={job.creator.firstName}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  {job.creator.firstName?.[0]}{job.creator.lastName?.[0]}
-                </span>
-              )}
+        <div className="flex items-center mb-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-3">
+            <span className="text-blue-600 dark:text-blue-400 font-medium text-sm">
+              {job.creator.firstName?.[0]}{job.creator.lastName?.[0]}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+              {job.creator.firstName} {job.creator.lastName}
             </div>
-            
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">
-                {job.creator.firstName} {job.creator.lastName}
-              </p>
-              <div className="flex items-center gap-1">
-                <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {job.creator.rating?.average?.toFixed(1) || 'New'}
-                </span>
-                {job.creator.verified && (
-                  <Badge variant="success" size="xs">
-                    Verified
-                  </Badge>
-                )}
+            {job.creator.rating && (
+              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                <Star className="w-3 h-3 text-yellow-400 mr-1" />
+                <span>{job.creator.rating.average?.toFixed(1)} ({job.creator.rating.totalReviews} reviews)</span>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -184,25 +170,29 @@ const MobileJobCard = ({ job, onSave, onShare }) => {
       {/* Action Buttons */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSave}
-            className="flex items-center gap-1"
-          >
-            <Heart className="h-4 w-4" />
-            <span className="hidden sm:inline">Save</span>
-          </Button>
+          <AuthPrompt requireAuth={true} promptMessage="Please sign in to save this job">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSave}
+              className="flex items-center gap-1"
+            >
+              <Heart className="h-4 w-4" />
+              <span className="hidden sm:inline">Save</span>
+            </Button>
+          </AuthPrompt>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleMessage}
-            className="flex items-center gap-1"
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Message</span>
-          </Button>
+          <AuthPrompt requireAuth={true} promptMessage="Please sign in to message the job creator">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleMessage}
+              className="flex items-center gap-1"
+            >
+              <MessageCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Message</span>
+            </Button>
+          </AuthPrompt>
         </div>
         
         <Button
@@ -217,28 +207,26 @@ const MobileJobCard = ({ job, onSave, onShare }) => {
       </div>
 
       {/* Quick Actions for Mobile */}
-      <div className="flex gap-2 mt-3 sm:hidden">
+      <div className="mt-3 flex gap-2">
         <Button
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/jobs/${job._id}/apply`);
-          }}
+          variant="primary"
+          size="sm"
+          onClick={handleCardPress}
           className="flex-1"
-          size="sm"
-        >
-          Apply Now
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/jobs/${job._id}`);
-          }}
-          size="sm"
         >
           View Details
         </Button>
+        
+        <AuthPrompt requireAuth={true} promptMessage="Please sign in to accept this job">
+          <Button
+            variant="success"
+            size="sm"
+            onClick={handleCardPress}
+            className="flex-1"
+          >
+            Accept Job
+          </Button>
+        </AuthPrompt>
       </div>
     </div>
   );

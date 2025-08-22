@@ -35,6 +35,7 @@ import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { apiService } from '../services/api';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 import ConfirmationModal from '../components/UI/ConfirmationModal';
+import AuthPrompt from '../components/Auth/AuthPrompt';
 import toast from 'react-hot-toast';
 import MapComponent from '../components/Map/Map';
 import { jobCategories, experienceLevels } from '../utils/config';
@@ -471,18 +472,20 @@ const JobDetailPage = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3 pt-4 border-t border-secondary-200 dark:border-secondary-700">
-                {canAcceptJob() && (
-                  <button
-                    onClick={showAcceptConfirmation}
-                    disabled={acceptJobMutation.isLoading || localLoading.accept}
-                    className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center font-medium"
-                  >
-                    {(acceptJobMutation.isLoading || localLoading.accept) && (
-                      <div className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    )}
-                    {(acceptJobMutation.isLoading || localLoading.accept) ? 'Accepting...' : 'Accept Job'}
-                  </button>
-                )}
+                <AuthPrompt requireAuth={true} promptMessage="Please sign in to accept this job">
+                  {canAcceptJob() && (
+                    <button
+                      onClick={showAcceptConfirmation}
+                      disabled={acceptJobMutation.isLoading || localLoading.accept}
+                      className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center font-medium"
+                    >
+                      {(acceptJobMutation.isLoading || localLoading.accept) && (
+                        <div className="inline-block w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      )}
+                      {(acceptJobMutation.isLoading || localLoading.accept) ? 'Accepting...' : 'Accept Job'}
+                    </button>
+                  )}
+                </AuthPrompt>
 
                 {canCompleteJob() && (
                   <button
@@ -523,36 +526,40 @@ const JobDetailPage = () => {
                   </button>
                 )}
 
-                {canSaveJob() && (
-                  <button
-                    onClick={handleSaveJob}
-                    disabled={saveJobMutation.isLoading || localLoading.save}
-                    className={`px-4 py-3 border transition-colors flex items-center ${
-                      isJobSaved() 
-                        ? 'border-primary-300 dark:border-primary-600 text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/20' 
-                        : 'border-secondary-300 dark:border-secondary-600 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-700'
-                    } rounded-lg`}
-                  >
-                    {(saveJobMutation.isLoading || localLoading.save) && (
-                      <div className="inline-block w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    )}
-                    <Bookmark className={`w-4 h-4 mr-2 ${isJobSaved() ? 'fill-current' : ''}`} />
-                    {(saveJobMutation.isLoading || localLoading.save) 
-                      ? (isJobSaved() ? 'Removing...' : 'Saving...') 
-                      : (isJobSaved() ? 'Saved' : 'Save Job')
-                    }
-                  </button>
-                )}
+                <AuthPrompt requireAuth={true} promptMessage="Please sign in to save this job">
+                  {canSaveJob() && (
+                    <button
+                      onClick={handleSaveJob}
+                      disabled={saveJobMutation.isLoading || localLoading.save}
+                      className={`px-4 py-3 border transition-colors flex items-center ${
+                        isJobSaved() 
+                          ? 'border-primary-300 dark:border-primary-600 text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/20' 
+                          : 'border-secondary-300 dark:border-secondary-600 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-700'
+                      } rounded-lg`}
+                    >
+                      {(saveJobMutation.isLoading || localLoading.save) && (
+                        <div className="inline-block w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      )}
+                      <Bookmark className={`w-4 h-4 mr-2 ${isJobSaved() ? 'fill-current' : ''}`} />
+                      {(saveJobMutation.isLoading || localLoading.save) 
+                        ? (isJobSaved() ? 'Removing...' : 'Saving...') 
+                        : (isJobSaved() ? 'Saved' : 'Save Job')
+                      }
+                    </button>
+                  )}
+                </AuthPrompt>
 
-                {job.creator && profile?.data?.data?._id !== job.creator._id && (
-                  <Link
-                    to={`/messages?user=${job.creator._id}`}
-                    className="inline-flex items-center px-4 py-3 border border-secondary-300 dark:border-secondary-600 text-secondary-700 dark:text-secondary-300 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Message
-                  </Link>
-                )}
+                <AuthPrompt requireAuth={true} promptMessage="Please sign in to message the job creator">
+                  {job.creator && profile?.data?.data?._id !== job.creator._id && (
+                    <Link
+                      to={`/messages?user=${job.creator._id}`}
+                      className="inline-flex items-center px-4 py-3 border border-secondary-300 dark:border-secondary-600 text-secondary-700 dark:text-secondary-300 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-700 transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message
+                    </Link>
+                  )}
+                </AuthPrompt>
               </div>
             </div>
 
@@ -804,15 +811,17 @@ const JobDetailPage = () => {
                     )}
 
                     <div className="flex items-center space-x-3 mt-3">
-                      {profile?.data?.data?._id !== job.creator._id && (
-                        <Link
-                          to={`/messages?user=${job.creator._id}`}
-                          className="inline-flex items-center text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-                        >
-                          <MessageCircle className="w-4 h-4 mr-1" />
-                          Message
-                        </Link>
-                      )}
+                      <AuthPrompt requireAuth={true} promptMessage="Please sign in to message this user">
+                        {profile?.data?.data?._id !== job.creator._id && (
+                          <Link
+                            to={`/messages?user=${job.creator._id}`}
+                            className="inline-flex items-center text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+                          >
+                            <MessageCircle className="w-4 h-4 mr-1" />
+                            Message
+                          </Link>
+                        )}
+                      </AuthPrompt>
 
                       {job.creator.email && (
                         <a
