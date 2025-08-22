@@ -927,17 +927,37 @@ const toggleJobSave = async (req, res) => {
     const user = await User.findById(req.user._id);
     const savedIndex = user.savedJobs.indexOf(job._id);
 
+    // Ensure job.stats and job.stats.savedBy exist
+    if (!job.stats) {
+      job.stats = {
+        views: 0,
+        applications: 0,
+        savedBy: []
+      };
+    }
+    if (!Array.isArray(job.stats.savedBy)) {
+      job.stats.savedBy = [];
+    }
+
     if (savedIndex > -1) {
       // Remove from saved jobs
       user.savedJobs.splice(savedIndex, 1);
-      await job.updateStats('savedBy', -1);
+      // Remove user from job's savedBy array
+      const userIndex = job.stats.savedBy.indexOf(req.user._id);
+      if (userIndex > -1) {
+        job.stats.savedBy.splice(userIndex, 1);
+      }
     } else {
       // Add to saved jobs
       user.savedJobs.push(job._id);
-      await job.updateStats('savedBy', 1);
+      // Add user to job's savedBy array
+      if (!job.stats.savedBy.includes(req.user._id)) {
+        job.stats.savedBy.push(req.user._id);
+      }
     }
 
     await user.save();
+    await job.save();
 
     res.json({
       success: true,

@@ -177,10 +177,13 @@ const jobSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
-    savedBy: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }]
+    savedBy: {
+      type: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }],
+      default: []
+    }
   },
   
   // Additional information
@@ -315,8 +318,20 @@ jobSchema.methods.addApplication = function() {
 // Method to update stats
 jobSchema.methods.updateStats = function(field, increment) {
   if (this.stats[field] !== undefined) {
-    this.stats[field] += increment;
-    return this.save();
+    if (Array.isArray(this.stats[field])) {
+      // Handle array fields like savedBy
+      if (increment > 0) {
+        // This should be handled by the controller, not here
+        return Promise.resolve(this);
+      } else {
+        // This should be handled by the controller, not here
+        return Promise.resolve(this);
+      }
+    } else {
+      // Handle numeric fields like views, applications
+      this.stats[field] += increment;
+      return this.save();
+    }
   }
   return Promise.resolve(this);
 };

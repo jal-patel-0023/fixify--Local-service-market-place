@@ -35,25 +35,83 @@ const JobCard = ({
   const statusInfo = jobStatusOptions.find(s => s.value === status);
   
   const formatBudget = (budget) => {
-    if (budget.min === budget.max) {
-      return `$${budget.min}`;
+    if (!budget) return 'Budget not specified';
+    
+    // Handle different budget structures
+    let min, max;
+    
+    if (typeof budget === 'number') {
+      return `$${budget}`;
+    } else if (budget.min !== undefined && budget.max !== undefined) {
+      min = budget.min;
+      max = budget.max;
+    } else if (budget.start !== undefined && budget.end !== undefined) {
+      min = budget.start;
+      max = budget.end;
+    } else if (budget.minBudget !== undefined && budget.maxBudget !== undefined) {
+      min = budget.minBudget;
+      max = budget.maxBudget;
+    } else {
+      return 'Budget not specified';
     }
-    return `$${budget.min} - $${budget.max}`;
+    
+    if (min === max) {
+      return `$${min}`;
+    }
+    return `$${min} - $${max}`;
   };
   
   const formatDate = (date) => {
     if (!date) return 'Flexible';
+    
+    // Handle date object structure
+    if (typeof date === 'object') {
+      if (date.start && date.end) {
+        return `${format(new Date(date.start), 'MMM dd, yyyy')} - ${format(new Date(date.end), 'MMM dd, yyyy')}`;
+      } else if (date.start) {
+        return format(new Date(date.start), 'MMM dd, yyyy');
+      } else if (date.end) {
+        return format(new Date(date.end), 'MMM dd, yyyy');
+      }
+      return 'Flexible';
+    }
+    
     return format(new Date(date), 'MMM dd, yyyy');
   };
   
   const formatTime = (time) => {
     if (!time) return 'Flexible';
+    
+    // Handle time object structure
+    if (typeof time === 'object') {
+      if (time.start && time.end) {
+        return `${time.start} - ${time.end}`;
+      } else if (time.start) {
+        return time.start;
+      } else if (time.end) {
+        return time.end;
+      }
+      return 'Flexible';
+    }
+    
     return time;
   };
   
   const getLocationText = () => {
-    if (!location?.address) return 'Location not specified';
-    return location.address.city || location.address.state || 'Location available';
+    if (!location) return 'Location not specified';
+    
+    // Handle different location structures
+    if (typeof location === 'string') {
+      return location;
+    } else if (location.address) {
+      return location.address.city || location.address.state || location.address.street || 'Location available';
+    } else if (location.city) {
+      return location.city;
+    } else if (location.state) {
+      return location.state;
+    }
+    
+    return 'Location not specified';
   };
   
   return (
@@ -129,7 +187,7 @@ const JobCard = ({
             <div className="flex items-center gap-2 text-sm">
               <User className="h-4 w-4 text-secondary-500" />
               <span className="text-secondary-600 dark:text-secondary-400">
-                Posted by {creator.fullName || creator.firstName || 'Anonymous'}
+                Posted by {creator.fullName || creator.firstName || creator.name || 'Anonymous'}
               </span>
             </div>
           )}
@@ -141,7 +199,7 @@ const JobCard = ({
               <span>{stats?.views || 0} views</span>
             </div>
             <span>•</span>
-            <span>{formatDistanceToNow(new Date(createdAt), { addSuffix: true })}</span>
+            <span>{createdAt ? formatDistanceToNow(new Date(createdAt), { addSuffix: true }) : 'Recently'}</span>
           </div>
         </div>
       </Card.Content>

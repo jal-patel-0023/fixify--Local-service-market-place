@@ -10,6 +10,7 @@ import {
   Menu,
   X,
   MapPin,
+  Bookmark,
   Settings,
   LogOut
 } from 'lucide-react';
@@ -188,7 +189,7 @@ const MobileNavigation = () => {
                     onClick={() => handleNavigation('/saved-jobs')}
                     className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-left"
                   >
-                    <MapPin className="h-5 w-5 text-gray-500" />
+                    <Bookmark className="h-5 w-5 text-gray-500" />
                     <span className="text-gray-900 dark:text-white">Saved Jobs</span>
                   </button>
                 </div>

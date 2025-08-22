@@ -19,6 +19,7 @@ import JobDetailPage from './pages/JobDetailPage';
 import PostJobPage from './pages/PostJobPage';
 import DashboardPage from './pages/DashboardPage';
 import MyJobsPage from './pages/MyJobsPage';
+import SavedJobsPage from './pages/SavedJobsPage';
 import ProfilePage from './pages/ProfilePage';
 import AuthPage from './pages/AuthPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -104,6 +105,14 @@ function AppContent() {
             element={
               <SignedIn>
                 <MyJobsPage />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/saved-jobs"
+            element={
+              <SignedIn>
+                <SavedJobsPage />
               </SignedIn>
             }
           />

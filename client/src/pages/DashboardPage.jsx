@@ -10,7 +10,8 @@ import {
   Plus,
   TrendingUp,
   Users,
-  CheckCircle
+  CheckCircle,
+  Bookmark
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useAuth as useClerkAuth } from '@clerk/clerk-react';
