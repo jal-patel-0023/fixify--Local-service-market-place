@@ -22,9 +22,10 @@ import DashboardPage from './pages/DashboardPage';
 import MyJobsPage from './pages/MyJobsPage';
 import SavedJobsPage from './pages/SavedJobsPage';
 import ProfilePage from './pages/ProfilePage';
-import AuthPage from './pages/AuthPage';
+import AuthPage from './pages/AuthPage'; 
 import NotFoundPage from './pages/NotFoundPage';
 import MessagingPage from './components/Messaging/MessagingPage';
+import MessagesPage from './pages/MessagesPage';
 import AdminPage from './pages/AdminPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminJobsPage from './pages/AdminJobsPage';
@@ -139,7 +140,7 @@ function AppRoutes() {
             path="/messages"
             element={
               <SignedIn>
-                <MessagingPage />
+                <MessagesPage />
               </SignedIn>
             }
           />

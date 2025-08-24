@@ -9,7 +9,8 @@ const {
   markAsRead,
   deleteMessage,
   getUnreadCount,
-  searchMessages
+  searchMessages,
+  getConversationStats
 } = require('../controllers/messageController');
 
 const router = express.Router();
@@ -23,16 +24,26 @@ router.get('/conversations', getConversations);
 // Get messages for a specific conversation
 router.get('/conversations/:conversationId', [
   param('conversationId').notEmpty().withMessage('Conversation ID is required'),
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
   handleValidationErrors
 ], getMessages);
 
+// Get conversation statistics
+router.get('/conversations/:conversationId/stats', [
+  param('conversationId').notEmpty().withMessage('Conversation ID is required'),
+  handleValidationErrors
+], getConversationStats);
+
 // Send a message
 router.post('/send', [
-  body('recipientId').notEmpty().withMessage('Recipient ID is required'),
+  body('recipientId').notEmpty().withMessage('Recipient ID is required')
+    .isMongoId().withMessage('Invalid recipient ID'),
   body('content').notEmpty().withMessage('Message content is required')
-    .isLength({ min: 1, max: 1000 }).withMessage('Message must be between 1 and 1000 characters'),
-  body('type').optional().isIn(['text', 'image', 'file']).withMessage('Invalid message type'),
+    .isLength({ min: 1, max: 2000 }).withMessage('Message must be between 1 and 2000 characters'),
+  body('type').optional().isIn(['text', 'image', 'file', 'system']).withMessage('Invalid message type'),
   body('jobId').optional().isMongoId().withMessage('Invalid job ID'),
+  body('attachments').optional().isArray().withMessage('Attachments must be an array'),
   handleValidationErrors
 ], sendMessage);
 
@@ -55,6 +66,8 @@ router.get('/unread/count', getUnreadCount);
 router.get('/search', [
   query('query').notEmpty().withMessage('Search query is required')
     .isLength({ min: 2 }).withMessage('Search query must be at least 2 characters'),
+  query('conversationId').optional().isMongoId().withMessage('Invalid conversation ID'),
+  query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50'),
   handleValidationErrors
 ], searchMessages);
 

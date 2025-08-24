@@ -195,12 +195,13 @@ export const apiService = {
   // Message endpoints
   messages: {
     getConversations: () => api.get('/messages/conversations'),
-    getMessages: (conversationId) => api.get(`/messages/conversations/${conversationId}`),
+    getMessages: (conversationId, params) => api.get(`/messages/conversations/${conversationId}`, { params }),
     sendMessage: (data) => api.post('/messages/send', data),
     markAsRead: (conversationId) => api.put(`/messages/conversations/${conversationId}/read`),
     deleteMessage: (messageId) => api.delete(`/messages/${messageId}`),
     getUnreadCount: () => api.get('/messages/unread/count'),
-    searchMessages: (query) => api.get('/messages/search', { params: { query } })
+    searchMessages: (params) => api.get('/messages/search', { params }),
+    getConversationStats: (conversationId) => api.get(`/messages/conversations/${conversationId}/stats`)
   },
 
   // Review endpoints

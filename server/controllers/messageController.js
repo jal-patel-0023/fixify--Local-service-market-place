@@ -3,7 +3,7 @@ const User = require('../models/User');
 const Job = require('../models/Job');
 const { createSystemNotification } = require('../utils/database');
 
-// Get conversations for a user
+// Get conversations for a user with enhanced data
 const getConversations = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -37,14 +37,15 @@ const getConversations = async (req, res) => {
                 {
                   $and: [
                     { $eq: ['$recipient', userId] },
-                    { $eq: ['$read', false] }
+                    { $eq: ['$isRead', false] }
                   ]
                 },
                 1,
                 0
               ]
             }
-          }
+          },
+          totalMessages: { $sum: 1 }
         }
       },
       {
@@ -66,25 +67,33 @@ const getConversations = async (req, res) => {
             firstName: '$otherUser.firstName',
             lastName: '$otherUser.lastName',
             profileImage: '$otherUser.profileImage',
-            rating: '$otherUser.rating'
+            rating: '$otherUser.rating',
+            isOnline: '$otherUser.isOnline',
+            lastSeen: '$otherUser.lastSeen'
           },
           lastMessage: {
             content: '$lastMessage.content',
-            type: '$lastMessage.type',
+            type: '$lastMessage.messageType',
             createdAt: '$lastMessage.createdAt',
-            sender: '$lastMessage.sender'
+            sender: '$lastMessage.sender',
+            isRead: '$lastMessage.isRead'
           },
-          unreadCount: 1
+          unreadCount: 1,
+          totalMessages: 1,
+          updatedAt: '$lastMessage.createdAt'
         }
       },
       {
-        $sort: { 'lastMessage.createdAt': -1 }
+        $sort: { updatedAt: -1 }
       }
     ]);
 
+    // Filter out conversations with deleted users
+    const validConversations = conversations.filter(conv => conv.otherUser);
+
     res.json({
       success: true,
-      data: conversations
+      data: validConversations
     });
   } catch (error) {
     console.error('Error getting conversations:', error);
@@ -95,10 +104,11 @@ const getConversations = async (req, res) => {
   }
 };
 
-// Get messages for a specific conversation
+// Get messages for a specific conversation with pagination
 const getMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
+    const { page = 1, limit = 50 } = req.query;
     const userId = req.user._id;
 
     // Verify user is part of this conversation
@@ -116,30 +126,56 @@ const getMessages = async (req, res) => {
       });
     }
 
-    // Get all messages in this conversation
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Get messages with pagination
     const messages = await Message.find({
       $or: [
         { sender: userId, recipient: conversationId },
         { sender: conversationId, recipient: userId }
       ]
     })
-    .sort({ createdAt: 1 })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit))
     .populate('sender', '_id firstName lastName profileImage')
-    .populate('recipient', '_id firstName lastName profileImage');
+    .populate('recipient', '_id firstName lastName profileImage')
+    .lean();
+
+    // Reverse to get chronological order
+    const reversedMessages = messages.reverse();
 
     // Mark messages as read
     await Message.updateMany(
       {
         sender: conversationId,
         recipient: userId,
-        read: false
+        isRead: false
       },
-      { read: true }
+      { 
+        isRead: true,
+        readAt: new Date()
+      }
     );
+
+    // Get total count for pagination
+    const totalMessages = await Message.countDocuments({
+      $or: [
+        { sender: userId, recipient: conversationId },
+        { sender: conversationId, recipient: userId }
+      ]
+    });
 
     res.json({
       success: true,
-      data: messages
+      data: reversedMessages,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: totalMessages,
+        pages: Math.ceil(totalMessages / limit)
+      }
     });
   } catch (error) {
     console.error('Error getting messages:', error);
@@ -150,20 +186,20 @@ const getMessages = async (req, res) => {
   }
 };
 
-// Send a message
+// Send a message with enhanced validation
 const sendMessage = async (req, res) => {
   try {
-    console.log('=== Send Message Request ===');
-    console.log('Request body:', req.body);
-    console.log('User:', req.user);
-
-    const { recipientId, content, type = 'text', jobId = null } = req.body;
+    const { recipientId, content, type = 'text', jobId = null, attachments = [] } = req.body;
     const senderId = req.user._id;
 
-    console.log('Sender ID:', senderId);
-    console.log('Recipient ID:', recipientId);
+    // Validate recipient exists and is not the same as sender
+    if (senderId.toString() === recipientId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot send message to yourself'
+      });
+    }
 
-    // Validate recipient exists
     const recipient = await User.findById(recipientId);
     if (!recipient) {
       return res.status(404).json({
@@ -172,7 +208,7 @@ const sendMessage = async (req, res) => {
       });
     }
 
-    // Validate sender exists (should always exist since user is authenticated)
+    // Validate sender exists
     const sender = await User.findById(senderId);
     if (!sender) {
       return res.status(404).json({
@@ -181,14 +217,26 @@ const sendMessage = async (req, res) => {
       });
     }
 
+    // Validate job if provided
+    if (jobId) {
+      const job = await Job.findById(jobId);
+      if (!job) {
+        return res.status(404).json({
+          success: false,
+          error: 'Job not found'
+        });
+      }
+    }
+
     // Create message
     const message = new Message({
       sender: senderId,
       recipient: recipientId,
-      content,
-      type,
+      content: content.trim(),
+      messageType: type,
       jobId,
-      conversationId: [senderId, recipientId].sort().join('_')
+      attachments,
+      conversationId: Message.generateConversationId(senderId, recipientId)
     });
 
     await message.save();
@@ -197,13 +245,23 @@ const sendMessage = async (req, res) => {
     await message.populate('sender', '_id firstName lastName profileImage');
     await message.populate('recipient', '_id firstName lastName profileImage');
 
-    // Create notification for recipient (temporarily disabled)
-    // await createSystemNotification(
-    //   recipientId,
-    //   'message',
-    //   'New Message',
-    //   `You have a new message from ${sender.firstName} ${sender.lastName}`
-    // );
+    // Create notification for recipient
+    try {
+      await createSystemNotification(
+        recipientId,
+        'message',
+        'New Message',
+        `You have a new message from ${sender.firstName} ${sender.lastName}`,
+        {
+          messageId: message._id,
+          senderId: senderId,
+          conversationId: message.conversationId
+        }
+      );
+    } catch (notificationError) {
+      console.error('Error creating notification:', notificationError);
+      // Don't fail the message send if notification fails
+    }
 
     res.json({
       success: true,
@@ -224,18 +282,22 @@ const markAsRead = async (req, res) => {
     const { conversationId } = req.params;
     const userId = req.user._id;
 
-    await Message.updateMany(
+    const result = await Message.updateMany(
       {
         sender: conversationId,
         recipient: userId,
-        read: false
+        isRead: false
       },
-      { read: true }
+      { 
+        isRead: true,
+        readAt: new Date()
+      }
     );
 
     res.json({
       success: true,
-      message: 'Messages marked as read'
+      message: 'Messages marked as read',
+      updatedCount: result.modifiedCount
     });
   } catch (error) {
     console.error('Error marking messages as read:', error);
@@ -246,7 +308,7 @@ const markAsRead = async (req, res) => {
   }
 };
 
-// Delete a message
+// Delete a message (soft delete for now)
 const deleteMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
@@ -269,6 +331,8 @@ const deleteMessage = async (req, res) => {
       });
     }
 
+    // For now, we'll actually delete the message
+    // In a production app, you might want to implement soft delete
     await Message.findByIdAndDelete(messageId);
 
     res.json({
@@ -291,7 +355,7 @@ const getUnreadCount = async (req, res) => {
 
     const unreadCount = await Message.countDocuments({
       recipient: userId,
-      read: false
+      isRead: false
     });
 
     res.json({
@@ -307,10 +371,10 @@ const getUnreadCount = async (req, res) => {
   }
 };
 
-// Search messages
+// Search messages with enhanced functionality
 const searchMessages = async (req, res) => {
   try {
-    const { query } = req.query;
+    const { query, conversationId = null, limit = 20 } = req.query;
     const userId = req.user._id;
 
     if (!query || query.trim().length < 2) {
@@ -320,7 +384,7 @@ const searchMessages = async (req, res) => {
       });
     }
 
-    const messages = await Message.find({
+    let searchQuery = {
       $and: [
         {
           $or: [
@@ -329,12 +393,24 @@ const searchMessages = async (req, res) => {
           ]
         },
         {
-          content: { $regex: query, $options: 'i' }
+          content: { $regex: query.trim(), $options: 'i' }
         }
       ]
-    })
+    };
+
+    // If searching within a specific conversation
+    if (conversationId) {
+      searchQuery.$and.push({
+        $or: [
+          { sender: userId, recipient: conversationId },
+          { sender: conversationId, recipient: userId }
+        ]
+      });
+    }
+
+    const messages = await Message.find(searchQuery)
     .sort({ createdAt: -1 })
-    .limit(20)
+    .limit(parseInt(limit))
     .populate('sender', '_id firstName lastName profileImage')
     .populate('recipient', '_id firstName lastName profileImage');
 
@@ -351,6 +427,78 @@ const searchMessages = async (req, res) => {
   }
 };
 
+// Get conversation statistics
+const getConversationStats = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user._id;
+
+    // Verify user is part of this conversation
+    const conversation = await Message.findOne({
+      $or: [
+        { sender: userId, recipient: conversationId },
+        { sender: conversationId, recipient: userId }
+      ]
+    });
+
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found'
+      });
+    }
+
+    const stats = await Message.aggregate([
+      {
+        $match: {
+          $or: [
+            { sender: userId, recipient: conversationId },
+            { sender: conversationId, recipient: userId }
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalMessages: { $sum: 1 },
+          unreadMessages: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ['$recipient', userId] },
+                    { $eq: ['$isRead', false] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          },
+          firstMessage: { $min: '$createdAt' },
+          lastMessage: { $max: '$createdAt' }
+        }
+      }
+    ]);
+
+    res.json({
+      success: true,
+      data: stats[0] || {
+        totalMessages: 0,
+        unreadMessages: 0,
+        firstMessage: null,
+        lastMessage: null
+      }
+    });
+  } catch (error) {
+    console.error('Error getting conversation stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get conversation statistics'
+    });
+  }
+};
+
 module.exports = {
   getConversations,
   getMessages,
@@ -358,5 +506,6 @@ module.exports = {
   markAsRead,
   deleteMessage,
   getUnreadCount,
-  searchMessages
+  searchMessages,
+  getConversationStats
 }; 
