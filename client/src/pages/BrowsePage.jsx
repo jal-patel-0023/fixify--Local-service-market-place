@@ -8,14 +8,16 @@ import AuthPrompt from '../components/Auth/AuthPrompt';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 const BrowsePage = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isLoaded, isSignedIn, tokenReady } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [savedOnly, setSavedOnly] = useState(false);
+  const [myJobsOnly, setMyJobsOnly] = useState(false);
 
   // Fetch jobs from API
   const { data: jobs = [], isLoading, error } = useQuery({
-    queryKey: ['jobs', searchTerm, selectedCategory, sortBy],
+    queryKey: ['jobs', searchTerm, selectedCategory, sortBy, savedOnly, myJobsOnly],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
@@ -23,15 +25,27 @@ const BrowsePage = () => {
       params.append('sort', sortBy);
 
       try {
-        // Try direct fetch first to test server connectivity
-        const directResponse = await fetch(`http://localhost:5000/api/jobs?${params.toString()}`);
+        // Authenticated views
+        if ((savedOnly || myJobsOnly) && isLoaded && isSignedIn && tokenReady) {
+          if (savedOnly) {
+            const resp = await apiService.jobs.savedJobs(Object.fromEntries(params));
+            const data = resp.data?.data || resp.data || [];
+            return Array.isArray(data) ? data : [];
+          }
+          if (myJobsOnly) {
+            const resp = await apiService.jobs.myJobs(Object.fromEntries(params));
+            const data = resp.data?.data || resp.data || [];
+            return Array.isArray(data) ? data : [];
+          }
+        }
 
+        // Public list fallback
+        const directResponse = await fetch(`http://localhost:5000/api/jobs?${params.toString()}`);
         if (directResponse.ok) {
           const directData = await directResponse.json();
           return directData.data || directData || [];
         }
 
-        // Fallback to apiService
         const response = await apiService.jobs.list(Object.fromEntries(params));
         return response.data || response || [];
       } catch (error) {
@@ -153,6 +167,26 @@ const BrowsePage = () => {
               <option value="budget_high">Highest Budget</option>
               <option value="budget_low">Lowest Budget</option>
             </select>
+          </div>
+
+          {/* Extra toggles */}
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="inline-flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
+              <input
+                type="checkbox"
+                checked={savedOnly}
+                onChange={(e) => { setSavedOnly(e.target.checked); if (e.target.checked) setMyJobsOnly(false); }}
+              />
+              <span>Saved only</span>
+            </label>
+            <label className="inline-flex items-center gap-2 text-secondary-700 dark:text-secondary-300">
+              <input
+                type="checkbox"
+                checked={myJobsOnly}
+                onChange={(e) => { setMyJobsOnly(e.target.checked); if (e.target.checked) setSavedOnly(false); }}
+              />
+              <span>My jobs</span>
+            </label>
           </div>
         </div>
 
