@@ -808,14 +808,14 @@ const JobDetailPage = () => {
                       {job.creator.firstName} {job.creator.lastName}
                     </h4>
 
-                    {job.creator.rating && (
+                    {/* {job.creator.rating && (
                       <div className="flex items-center mt-1">
                         <Star className="w-4 h-4 text-warning-500 mr-1" />
                         <span className="text-sm text-secondary-600 dark:text-secondary-400">
                           {job.creator.rating.average?.toFixed(1)} ({job.creator.rating.totalReviews} reviews)
                         </span>
                       </div>
-                    )}
+                    )} */}
 
                     <div className="flex items-center space-x-3 mt-3">
                       <AuthPrompt requireAuth={true} promptMessage="Please sign in to message this user">
