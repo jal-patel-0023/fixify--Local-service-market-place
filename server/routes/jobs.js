@@ -26,16 +26,16 @@ router.get('/categories', (req, res) => {
   res.json({ success: true, data: categories });
 });
 
-// Public job detail route (must be before protected routes)
+// User-specific job lists (move these above the :id route)
+router.get('/my-jobs', authenticateUser, validateSession, jobController.getMyJobs);
+router.get('/accepted-jobs', authenticateUser, validateSession, jobController.getAcceptedJobs);
+router.get('/saved', authenticateUser, validateSession, jobController.getSavedJobs);
+
+// Public job detail route (must be after specific routes)
 router.get('/:id', optionalAuth, jobController.getJob);
 
 // Protected routes (authentication required)
 router.use('/', authenticateUser, validateSession);
-
-// User-specific job lists
-router.get('/my-jobs', jobController.getMyJobs);
-router.get('/accepted-jobs', jobController.getAcceptedJobs);
-router.get('/saved', jobController.getSavedJobs);
 
 // Job CRUD operations
 router.post('/',

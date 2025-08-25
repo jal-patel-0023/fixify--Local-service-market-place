@@ -19,7 +19,7 @@ import { apiService } from '../services/api';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
 
 const DashboardPage = () => {
-  const { user } = useAuth();
+  const { user, isLoaded, isSignedIn, tokenReady } = useAuth();
   const { getToken } = useClerkAuth();
 
   // Fetch user's jobs
@@ -36,7 +36,7 @@ const DashboardPage = () => {
         return [];
       }
     },
-    enabled: !!user
+    enabled: !!user && isLoaded && isSignedIn && tokenReady
   });
 
   // Ensure myJobs is always an array
@@ -140,7 +140,7 @@ const DashboardPage = () => {
         return [];
       }
     },
-    enabled: !!user
+    enabled: !!user && isLoaded && isSignedIn && tokenReady
   });
 
   const formatDate = (date) => {

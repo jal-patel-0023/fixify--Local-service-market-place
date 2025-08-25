@@ -20,7 +20,7 @@ import JobCard from '../components/Jobs/JobCard';
 import { jobCategories } from '../utils/config';
 
 const SavedJobsPage = () => {
-  const { profile } = useAuth();
+  const { isLoaded, isSignedIn, tokenReady } = useAuth();
 
   // State for filters
   const [filters, setFilters] = React.useState({
@@ -39,15 +39,15 @@ const SavedJobsPage = () => {
       if (filters.minBudget) params.append('minBudget', filters.minBudget);
       if (filters.maxBudget) params.append('maxBudget', filters.maxBudget);
       if (filters.search) params.append('search', filters.search);
-      
       const response = await apiService.jobs.savedJobs(params);
       return response.data;
     },
-    enabled: !!profile?.data?.data?._id
+    enabled: isLoaded && isSignedIn && tokenReady
   });
 
   const savedJobs = savedJobsData?.data || [];
   const pagination = savedJobsData?.pagination;
+  const totalPages = pagination?.pages || pagination?.totalPages || 0;
 
   // Handle filter changes
   const handleFilterChange = (key, value) => {
@@ -224,21 +224,21 @@ const SavedJobsPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedJobs.map((job) => (
-              <JobCard key={job._id} job={job} />
+              <JobCard key={job._id} {...job} />
             ))}
           </div>
         )}
 
         {/* Pagination */}
-        {pagination && pagination.totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="mt-8 flex justify-center">
             <nav className="flex items-center space-x-2">
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
                   onClick={() => setFilters(prev => ({ ...prev, page }))}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    page === pagination.currentPage
+                    page === pagination?.currentPage
                       ? 'bg-primary-600 text-white'
                       : 'bg-white dark:bg-secondary-800 text-secondary-700 dark:text-secondary-300 hover:bg-secondary-50 dark:hover:bg-secondary-700 border border-secondary-300 dark:border-secondary-600'
                   }`}

@@ -53,8 +53,8 @@ const JobCard = ({
               {title}
             </h3>
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant={getStatusColor(status)} size="sm">
-                {status.replace('_', ' ').toUpperCase()}
+              <Badge variant={getStatusColor(status || 'open')} size="sm">
+                {(status || 'open').replace('_', ' ').toUpperCase()}
               </Badge>
               {isUrgent && (
                 <Badge variant="error" size="sm">

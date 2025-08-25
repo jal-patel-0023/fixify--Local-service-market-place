@@ -22,7 +22,7 @@ import JobForm from '../components/Jobs/JobForm';
 import toast from 'react-hot-toast';
 
 const MyJobsPage = () => {
-  const { user } = useAuth();
+  const { user, isLoaded, isSignedIn, tokenReady } = useAuth();
   const queryClient = useQueryClient();
   const [editingJob, setEditingJob] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -40,7 +40,7 @@ const MyJobsPage = () => {
         return [];
       }
     },
-    enabled: !!user
+    enabled: !!user && isLoaded && isSignedIn && tokenReady
   });
 
   // Update job mutation

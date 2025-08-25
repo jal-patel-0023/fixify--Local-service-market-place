@@ -842,6 +842,12 @@ const reopenJob = async (req, res) => {
  * @route GET /api/jobs/my-jobs
  */
 const getMyJobs = async (req, res) => {
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({
+      error: 'Authentication required',
+      message: 'User not authenticated or session expired.'
+    });
+  }
   try {
     const { page = 1, limit = 10, status } = req.query;
 

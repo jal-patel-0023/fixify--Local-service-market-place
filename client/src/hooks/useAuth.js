@@ -256,6 +256,10 @@ export const useAuth = () => {
     getToken,
     user,
     
+    // Auth readiness flags
+    tokenReady,
+    isAuthReady: isLoaded && isSignedIn && tokenReady,
+    
     // Profile data
     profile,
     profileLoading,
