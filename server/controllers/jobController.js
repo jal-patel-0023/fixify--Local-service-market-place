@@ -740,8 +740,11 @@ const cancelJob = async (req, res) => {
       });
     }
 
+    // Determine if this is the creator cancelling or assigned user cancelling
+    const isCreatorCancelling = job.creator.toString() === req.user._id.toString();
+
     // Cancel the job
-    await job.cancelJob();
+    await job.cancelJob(req.user._id, reason, isCreatorCancelling);
 
     // Notify the other party
     const otherUser = job.creator.toString() === req.user._id.toString() 
@@ -749,19 +752,24 @@ const cancelJob = async (req, res) => {
       : job.creator;
 
     if (otherUser) {
+      const notificationTitle = isCreatorCancelling ? 'Job Cancelled' : 'Job Acceptance Cancelled';
+      const notificationMessage = isCreatorCancelling 
+        ? `The job "${job.title}" has been cancelled by the creator.${reason ? ` Reason: ${reason}` : ''}`
+        : `The job "${job.title}" is now available again as the previous assignee cancelled their acceptance.${reason ? ` Reason: ${reason}` : ''}`;
+      
       await createJobNotification(
         otherUser,
-        'job_cancelled',
+        isCreatorCancelling ? 'job_cancelled' : 'job_reopened',
         job._id,
-        'Job Cancelled',
-        `The job "${job.title}" has been cancelled.${reason ? ` Reason: ${reason}` : ''}`
+        notificationTitle,
+        notificationMessage
       );
     }
 
     res.json({
       success: true,
       data: job,
-      message: 'Job cancelled successfully'
+      message: isCreatorCancelling ? 'Job cancelled successfully' : 'Job acceptance cancelled and job is now available again'
     });
   } catch (error) {
     console.error('Cancel job error:', error);

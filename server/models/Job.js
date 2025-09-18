@@ -295,11 +295,22 @@ jobSchema.methods.completeJob = function() {
 };
 
 // Method to cancel job
-jobSchema.methods.cancelJob = function(userId, reason) {
-  this.status = 'cancelled';
-  this.cancelledBy = userId;
-  this.cancelledAt = new Date();
-  this.cancellationReason = reason;
+jobSchema.methods.cancelJob = function(userId, reason, isCreatorCancelling = false) {
+  if (isCreatorCancelling) {
+    // Job creator is cancelling - mark as cancelled permanently
+    this.status = 'cancelled';
+    this.cancelledBy = userId;
+    this.cancelledAt = new Date();
+    this.cancellationReason = reason;
+  } else {
+    // Assigned user is cancelling their acceptance - reopen the job
+    this.status = 'open';
+    this.assignedTo = null;
+    this.acceptedAt = null;
+    this.cancelledBy = userId;
+    this.cancelledAt = new Date();
+    this.cancellationReason = reason;
+  }
   return this.save();
 };
 
