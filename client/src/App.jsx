@@ -73,7 +73,11 @@ function AppContent() {
   }, [getToken]);
 
   if (!isLoaded) {
-    return <LoadingSpinner />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary-50 dark:bg-secondary-900">
+        <LoadingSpinner size="lg" text="Loading Fixify..." />
+      </div>
+    );
   }
 
   return (
