@@ -179,8 +179,8 @@ export const getMapCenter = (jobs, userLocation) => {
     return userLocation;
   }
   
-  // Default to NYC
-  return { lat: 40.7128, lng: -74.0060 };
+  // Default to Gujarat, India
+  return { lat: 23.0225, lng: 72.5714 };
 };
 
 // Calculate optimal zoom level based on jobs spread

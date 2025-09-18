@@ -164,7 +164,7 @@ const LocationPicker = ({
 
       {/* Map */}
       <Map
-        center={coordinates || { lat: 40.7128, lng: -74.0060 }}
+        center={coordinates || { lat: 23.0225, lng: 72.5714 }}
         zoom={coordinates ? 15 : 10}
         markers={markers}
         onMapClick={handleMapClick}

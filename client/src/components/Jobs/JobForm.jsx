@@ -111,7 +111,7 @@ const JobForm = ({
           city: '',
           state: '',
           zipCode: '',
-          country: 'US'
+          country: 'India'
         }
       };
 
@@ -141,7 +141,7 @@ const JobForm = ({
           city: '',
           state: '',
           zipCode: '',
-          country: 'US'
+          country: 'India'
         }
       };
     }

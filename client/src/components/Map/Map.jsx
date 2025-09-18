@@ -3,7 +3,7 @@ import { Loader } from '@googlemaps/js-api-loader';
 import { config } from '../../utils/config';
 
 const Map = ({
-  center = { lat: 40.7128, lng: -74.0060 }, // Default to NYC
+  center = { lat: 23.0225, lng: 72.5714 }, // Default to Gujarat, India
   zoom = 12,
   markers = [],
   onMapClick,
