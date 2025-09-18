@@ -10,19 +10,52 @@ import LoadingSpinner from '../components/UI/LoadingSpinner';
 const BrowsePage = () => {
   const { user, profile, isLoaded, isSignedIn, tokenReady } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // For the input field
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [savedOnly, setSavedOnly] = useState(false);
   const [myJobsOnly, setMyJobsOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [allJobs, setAllJobs] = useState([]);
+  const [hasMoreJobs, setHasMoreJobs] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Fetch jobs from API
-  const { data: jobs = [], isLoading, error } = useQuery({
+  // Fetch initial jobs from API
+  const { data: initialJobsData, isLoading, error } = useQuery({
     queryKey: ['jobs', searchTerm, selectedCategory, sortBy, savedOnly, myJobsOnly],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (selectedCategory) params.append('category', selectedCategory);
-      params.append('sort', sortBy);
+      // Don't pass status parameter to show all jobs (open, accepted, completed, etc.)
+      
+      // Map frontend sort values to backend parameters
+      let sortByParam, sortOrderParam;
+      switch (sortBy) {
+        case 'newest':
+          sortByParam = 'createdAt';
+          sortOrderParam = 'desc';
+          break;
+        case 'oldest':
+          sortByParam = 'createdAt';
+          sortOrderParam = 'asc';
+          break;
+        case 'budget_high':
+          sortByParam = 'budget.max';
+          sortOrderParam = 'desc';
+          break;
+        case 'budget_low':
+          sortByParam = 'budget.max';
+          sortOrderParam = 'asc';
+          break;
+        default:
+          sortByParam = 'createdAt';
+          sortOrderParam = 'desc';
+      }
+      
+      params.append('sortBy', sortByParam);
+      params.append('sortOrder', sortOrderParam);
+      params.append('page', '1'); // Always start with page 1
 
       try {
         // Authenticated views
@@ -30,31 +63,148 @@ const BrowsePage = () => {
           if (savedOnly) {
             const resp = await apiService.jobs.savedJobs(Object.fromEntries(params));
             const data = resp.data?.data || resp.data || [];
-            return Array.isArray(data) ? data : [];
+            return {
+              jobs: Array.isArray(data) ? data : [],
+              pagination: { total: data.length, pages: 1, page: 1 },
+              hasMore: false
+            };
           }
           if (myJobsOnly) {
             const resp = await apiService.jobs.myJobs(Object.fromEntries(params));
             const data = resp.data?.data || resp.data || [];
-            return Array.isArray(data) ? data : [];
+            return {
+              jobs: Array.isArray(data) ? data : [],
+              pagination: { total: data.length, pages: 1, page: 1 },
+              hasMore: false
+            };
           }
         }
 
-        // Public list fallback
-        const directResponse = await fetch(`http://localhost:5000/api/jobs?${params.toString()}`);
-        if (directResponse.ok) {
-          const directData = await directResponse.json();
-          return directData.data || directData || [];
-        }
-
-        const response = await apiService.jobs.list(Object.fromEntries(params));
-        return response.data || response || [];
+        // Use browse endpoint for better filtering and sorting
+        const response = await apiService.browse.jobs(Object.fromEntries(params));
+        const data = response.data?.data || response.data || [];
+        const pagination = response.data?.pagination || response.pagination;
+        
+        return {
+          jobs: Array.isArray(data) ? data : [],
+          pagination: pagination,
+          hasMore: pagination ? 1 < pagination.pages : false
+        };
       } catch (error) {
         console.error('Failed to fetch jobs:', error);
-        return [];
+        return { jobs: [], pagination: { total: 0, pages: 1, page: 1 }, hasMore: false };
       }
     },
     retry: 1
   });
+
+  // Handle initial jobs data
+  React.useEffect(() => {
+    if (initialJobsData && initialJobsData.jobs) {
+      setAllJobs(initialJobsData.jobs);
+      setHasMoreJobs(initialJobsData.hasMore || false);
+      setCurrentPage(1);
+    }
+  }, [initialJobsData]);
+
+  // Debounced search effect
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Reset pagination when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+    setAllJobs([]);
+    setHasMoreJobs(true);
+  }, [searchTerm, selectedCategory, sortBy, savedOnly, myJobsOnly]);
+
+  // Load more jobs function
+  const loadMoreJobs = async () => {
+    if (isLoadingMore) return;
+    
+    setIsLoadingMore(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (selectedCategory) params.append('category', selectedCategory);
+      
+      // Map frontend sort values to backend parameters
+      let sortByParam, sortOrderParam;
+      switch (sortBy) {
+        case 'newest':
+          sortByParam = 'createdAt';
+          sortOrderParam = 'desc';
+          break;
+        case 'oldest':
+          sortByParam = 'createdAt';
+          sortOrderParam = 'asc';
+          break;
+        case 'budget_high':
+          sortByParam = 'budget.max';
+          sortOrderParam = 'desc';
+          break;
+        case 'budget_low':
+          sortByParam = 'budget.max';
+          sortOrderParam = 'asc';
+          break;
+        default:
+          sortByParam = 'createdAt';
+          sortOrderParam = 'desc';
+      }
+      
+      params.append('sortBy', sortByParam);
+      params.append('sortOrder', sortOrderParam);
+      params.append('page', (currentPage + 1).toString());
+
+      let response;
+      if ((savedOnly || myJobsOnly) && isLoaded && isSignedIn && tokenReady) {
+        if (savedOnly) {
+          response = await apiService.jobs.savedJobs(Object.fromEntries(params));
+        } else if (myJobsOnly) {
+          response = await apiService.jobs.myJobs(Object.fromEntries(params));
+        }
+      } else {
+        response = await apiService.browse.jobs(Object.fromEntries(params));
+      }
+
+      const data = response.data?.data || response.data || [];
+      const pagination = response.data?.pagination || response.pagination;
+      
+      if (Array.isArray(data) && data.length > 0) {
+        setAllJobs(prev => [...prev, ...data]);
+        setCurrentPage(prev => prev + 1);
+        setHasMoreJobs(pagination ? (currentPage + 1) < pagination.pages : false);
+      } else {
+        setHasMoreJobs(false);
+      }
+    } catch (error) {
+      console.error('Failed to load more jobs:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // Handle search input changes
+  const handleSearchInputChange = (e) => {
+    setSearchInput(e.target.value);
+  };
+
+  // Handle search on Enter key
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      setSearchTerm(searchInput);
+    }
+  };
+
+  // Handle immediate search (for search button if needed)
+  const handleSearchSubmit = () => {
+    setSearchTerm(searchInput);
+  };
 
   const categories = [
     'plumbing', 'electrical', 'carpentry', 'cleaning',
@@ -132,9 +282,10 @@ const BrowsePage = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search jobs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search jobs... (press Enter to search)"
+                value={searchInput}
+                onChange={handleSearchInputChange}
+                onKeyPress={handleSearchKeyPress}
                 className="w-full pl-10 pr-4 py-2 border border-secondary-300 dark:border-secondary-600 rounded-lg bg-white dark:bg-secondary-700 text-secondary-900 dark:text-secondary-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
@@ -193,12 +344,13 @@ const BrowsePage = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-secondary-600 dark:text-secondary-400">
-            {jobs.length} job{jobs.length !== 1 ? 's' : ''} found
+            {allJobs.length} job{allJobs.length !== 1 ? 's' : ''} found
+            {hasMoreJobs && ` (showing ${allJobs.length} of ${initialJobsData?.pagination?.total || 'many'})`}
           </p>
         </div>
 
         {/* Jobs Grid */}
-        {jobs.length === 0 ? (
+        {allJobs.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-secondary-100 dark:bg-secondary-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-secondary-400" />
@@ -212,7 +364,7 @@ const BrowsePage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jobs.map((job) => (
+            {allJobs.map((job) => (
               <Link
                 key={job._id}
                 to={`/jobs/${job._id}`}
@@ -310,6 +462,36 @@ const BrowsePage = () => {
                 </div>
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {hasMoreJobs && allJobs.length > 0 && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={loadMoreJobs}
+              disabled={isLoadingMore}
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              {isLoadingMore ? (
+                <>
+                  <LoadingSpinner />
+                  <span className="ml-2">Loading more jobs...</span>
+                </>
+              ) : (
+                'Load More Jobs'
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Loading indicator below jobs when loading more */}
+        {isLoadingMore && (
+          <div className="mt-4 text-center">
+            <div className="inline-flex items-center text-secondary-600 dark:text-secondary-400">
+              <LoadingSpinner />
+              <span className="ml-2">Loading more jobs...</span>
+            </div>
           </div>
         )}
       </div>

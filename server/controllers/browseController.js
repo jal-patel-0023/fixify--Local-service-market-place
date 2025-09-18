@@ -17,7 +17,7 @@ const browseJobs = async (req, res) => {
       page = 1,
       limit = 12,
       category,
-      status = 'open',
+      status,
       minBudget,
       maxBudget,
       distance,
