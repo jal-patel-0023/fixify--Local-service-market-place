@@ -373,7 +373,7 @@ const BrowsePage = () => {
                 onChange={e => setSearchRadius(Number(e.target.value))}
                 className="w-20 px-2 py-1 border rounded"
               />
-              <span className="text-secondary-700 dark:text-secondary-300">miles</span>
+              <span className="text-secondary-700 dark:text-secondary-300">kilometers</span>
             </div>
           )}
           {userLocation && (
@@ -526,8 +526,7 @@ const BrowsePage = () => {
                           job.location.coordinates[1],
                           job.location.coordinates[0]
                         );
-                        const distMi = distKm * 0.621371;
-                        return `Distance from you: ${distMi.toFixed(1)} mi`;
+                        return `Distance from you: ${distKm.toFixed(1)} km`;
                       })()}
                     </div>
                   )}

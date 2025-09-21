@@ -6,10 +6,10 @@ const { User, Job, Message, Notification } = require('../models');
  * @param {number} lon1 - Longitude of first point
  * @param {number} lat2 - Latitude of second point
  * @param {number} lon2 - Longitude of second point
- * @returns {number} Distance in miles
+ * @returns {number} Distance in kilometers
  */
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 3959; // Earth's radius in miles
+  const R = 6371; // Earth's radius in kilometers
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
@@ -24,10 +24,10 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
  * Create geospatial query for finding nearby jobs/users
  * @param {number} latitude - User's latitude
  * @param {number} longitude - User's longitude
- * @param {number} maxDistance - Maximum distance in miles
+ * @param {number} maxDistance - Maximum distance in kilometers
  * @returns {Object} MongoDB geospatial query
  */
-const createNearbyQuery = (coordinates, maxDistanceMiles = 25) => {
+const createNearbyQuery = (coordinates, maxDistanceKm = 40) => {
   const [longitude, latitude] = Array.isArray(coordinates) ? coordinates : [coordinates.lng, coordinates.lat];
   return {
     location: {
@@ -36,7 +36,7 @@ const createNearbyQuery = (coordinates, maxDistanceMiles = 25) => {
           type: 'Point',
           coordinates: [longitude, latitude]
         },
-        $maxDistance: maxDistanceMiles * 1609.34 // miles to meters
+        $maxDistance: maxDistanceKm * 1000 // kilometers to meters
       }
     }
   };

@@ -155,7 +155,7 @@ const jobSchema = new mongoose.Schema({
   },
   maxDistance: {
     type: Number,
-    default: 25, // miles
+    default: 40, // kilometers
     min: 1,
     max: 100
   },

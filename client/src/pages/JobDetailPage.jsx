@@ -771,7 +771,7 @@ const JobDetailPage = () => {
                     <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                       {job.maxDistance || 0}
                     </div>
-                    <div className="text-sm text-secondary-600 dark:text-secondary-400">Max Distance (mi)</div>
+                    <div className="text-sm text-secondary-600 dark:text-secondary-400">Max Distance (km)</div>
                   </div>
                 </div>
               </div>
