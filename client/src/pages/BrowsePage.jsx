@@ -19,11 +19,21 @@ const BrowsePage = () => {
   const [allJobs, setAllJobs] = useState([]);
   const [hasMoreJobs, setHasMoreJobs] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [componentId] = useState(() => Math.random().toString(36).substr(2, 9));
+  const [forceRefresh, setForceRefresh] = useState(0);
 
   // Fetch initial jobs from API
-  const { data: initialJobsData, isLoading, error } = useQuery({
-    queryKey: ['jobs', searchTerm, selectedCategory, sortBy, savedOnly, myJobsOnly],
+  const { data: initialJobsData, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: ['jobs', searchTerm, selectedCategory, sortBy, savedOnly, myJobsOnly, componentId, forceRefresh],
     queryFn: async () => {
+      console.log('BrowsePage: Query function called with params:', {
+        searchTerm,
+        selectedCategory,
+        sortBy,
+        savedOnly,
+        myJobsOnly
+      });
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (selectedCategory) params.append('category', selectedCategory);
@@ -81,9 +91,13 @@ const BrowsePage = () => {
         }
 
         // Use browse endpoint for better filtering and sorting
+        console.log('BrowsePage: Making API call to browse.jobs with params:', Object.fromEntries(params));
         const response = await apiService.browse.jobs(Object.fromEntries(params));
+        console.log('BrowsePage: API response:', response);
         const data = response.data?.data || response.data || [];
         const pagination = response.data?.pagination || response.pagination;
+        
+        console.log('BrowsePage: Processed data:', { data, pagination, dataLength: data.length });
         
         return {
           jobs: Array.isArray(data) ? data : [],
@@ -94,16 +108,22 @@ const BrowsePage = () => {
         console.error('Failed to fetch jobs:', error);
         return { jobs: [], pagination: { total: 0, pages: 1, page: 1 }, hasMore: false };
       }
-    },
-    retry: 1
+    }
   });
 
   // Handle initial jobs data
   React.useEffect(() => {
+    console.log('BrowsePage: initialJobsData changed:', initialJobsData);
     if (initialJobsData && initialJobsData.jobs) {
+      console.log('BrowsePage: Setting jobs from initialJobsData:', initialJobsData.jobs.length, 'jobs');
       setAllJobs(initialJobsData.jobs);
       setHasMoreJobs(initialJobsData.hasMore || false);
       setCurrentPage(1);
+    } else if (initialJobsData && !initialJobsData.jobs) {
+      // Handle case where query returns empty data
+      console.log('BrowsePage: No jobs in initialJobsData, clearing jobs');
+      setAllJobs([]);
+      setHasMoreJobs(false);
     }
   }, [initialJobsData]);
 
@@ -119,9 +139,38 @@ const BrowsePage = () => {
   // Reset pagination when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-    setAllJobs([]);
     setHasMoreJobs(true);
+    // Clear jobs when filters change to show loading state
+    setAllJobs([]);
   }, [searchTerm, selectedCategory, sortBy, savedOnly, myJobsOnly]);
+
+  // Handle component mount
+  React.useEffect(() => {
+    setMounted(true);
+    // Force refresh when component mounts to ensure fresh data
+    setForceRefresh(prev => prev + 1);
+    return () => setMounted(false);
+  }, []);
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('BrowsePage state:', {
+      componentId,
+      forceRefresh,
+      isLoading,
+      isFetching,
+      hasInitialData: !!initialJobsData,
+      initialJobsData,
+      jobsCount: allJobs.length,
+      allJobs,
+      searchTerm,
+      selectedCategory,
+      sortBy,
+      savedOnly,
+      myJobsOnly,
+      mounted
+    });
+  }, [componentId, forceRefresh, isLoading, isFetching, initialJobsData, allJobs.length, allJobs, searchTerm, selectedCategory, sortBy, savedOnly, myJobsOnly, mounted]);
 
   // Load more jobs function
   const loadMoreJobs = async () => {
