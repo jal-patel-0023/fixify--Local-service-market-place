@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { apiService } from '../services/api';
 import AuthPrompt from '../components/Auth/AuthPrompt';
 import LoadingSpinner from '../components/UI/LoadingSpinner';
+import { calculateDistance } from '../utils/mapUtils';
 
 const BrowsePage = () => {
   const { user, profile, isLoaded, isSignedIn, tokenReady } = useAuth();
@@ -22,6 +23,31 @@ const BrowsePage = () => {
   const [mounted, setMounted] = useState(false);
   const [componentId] = useState(() => Math.random().toString(36).substr(2, 9));
   const [forceRefresh, setForceRefresh] = useState(0);
+  const [userLocation, setUserLocation] = useState(null);
+  const [searchRadius, setSearchRadius] = useState(25);
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  const getLocation = () => {
+    setLocationLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setLocationLoading(false);
+        },
+        (error) => {
+          alert('Location access denied or unavailable.');
+          setLocationLoading(false);
+        }
+      );
+    } else {
+      alert('Geolocation is not supported by this browser.');
+      setLocationLoading(false);
+    }
+  };
 
   // Fetch initial jobs from API
   const { data: initialJobsData, isLoading, error, refetch, isFetching } = useQuery({
@@ -38,6 +64,11 @@ const BrowsePage = () => {
       if (searchTerm) params.append('search', searchTerm);
       if (selectedCategory) params.append('category', selectedCategory);
       // Don't pass status parameter to show all jobs (open, accepted, completed, etc.)
+      if (userLocation) {
+        params.append('latitude', userLocation.lat);
+        params.append('longitude', userLocation.lng);
+        params.append('distance', searchRadius);
+      }
       
       // Map frontend sort values to backend parameters
       let sortByParam, sortOrderParam;
@@ -322,6 +353,33 @@ const BrowsePage = () => {
             Find local service opportunities in your area
           </p>
         </div>
+        {/* Location & Radius Controls */}
+        <div className="flex flex-wrap gap-4 mb-4 items-center">
+          <button
+            onClick={getLocation}
+            disabled={locationLoading}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+          >
+            {locationLoading ? 'Getting location...' : (userLocation ? 'Update Location' : 'Find Jobs Near Me')}
+          </button>
+          {userLocation && (
+            <div className="flex items-center gap-2">
+              <span className="text-secondary-700 dark:text-secondary-300">Radius:</span>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={searchRadius}
+                onChange={e => setSearchRadius(Number(e.target.value))}
+                className="w-20 px-2 py-1 border rounded"
+              />
+              <span className="text-secondary-700 dark:text-secondary-300">miles</span>
+            </div>
+          )}
+          {userLocation && (
+            <span className="text-xs text-secondary-500 dark:text-secondary-400">Location: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}</span>
+          )}
+        </div>
 
         {/* Filters */}
         <div className="bg-white dark:bg-secondary-800 rounded-lg shadow-sm border border-secondary-200 dark:border-secondary-700 p-6 mb-8">
@@ -454,17 +512,29 @@ const BrowsePage = () => {
                     <DollarSign className="w-4 h-4 mr-2" />
                     {formatBudget(job.budget?.min, job.budget?.max)}
                   </div>
-
                   <div className="flex items-center text-sm text-secondary-600 dark:text-secondary-400">
                     <MapPin className="w-4 h-4 mr-2" />
                     {job.location?.address?.city}, {job.location?.address?.state}
                   </div>
-
+                  {userLocation && job.location?.coordinates && (
+                    <div className="flex items-center text-sm text-primary-600 dark:text-primary-400">
+                      <span className="mr-2">📍</span>
+                      {(() => {
+                        const distKm = calculateDistance(
+                          userLocation.lat,
+                          userLocation.lng,
+                          job.location.coordinates[1],
+                          job.location.coordinates[0]
+                        );
+                        const distMi = distKm * 0.621371;
+                        return `Distance from you: ${distMi.toFixed(1)} mi`;
+                      })()}
+                    </div>
+                  )}
                   <div className="flex items-center text-sm text-secondary-600 dark:text-secondary-400">
                     <Clock className="w-4 h-4 mr-2" />
                     {formatDate(job.preferredDate)}
                   </div>
-
                   {job.creator && (
                     <div className="flex items-center text-sm text-secondary-600 dark:text-secondary-400">
                       <User className="w-4 h-4 mr-2" />

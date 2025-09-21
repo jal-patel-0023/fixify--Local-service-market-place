@@ -29,7 +29,8 @@ const createJob = async (req, res) => {
       preferredDate,
       preferredTime,
       requirements,
-      images
+      images,
+      maxDistance
     } = req.body;
 
     // Validate location coordinates
@@ -76,7 +77,8 @@ const createJob = async (req, res) => {
       preferredTime,
       requirements: requirementsData,
       images: images || [],
-      status: 'open'
+      status: 'open',
+      maxDistance: maxDistance || 25
     };
     
     console.log('Create job - Final job data:', jobData);
@@ -380,7 +382,8 @@ const updateJob = async (req, res) => {
       preferredDate,
       preferredTime,
       requirements,
-      images
+      images,
+      maxDistance
     } = req.body;
 
     // Validate location coordinates if provided
@@ -423,6 +426,9 @@ const updateJob = async (req, res) => {
     }
     if (!updateData.requirements) {
       updateData.requirements = existingJob.requirements;
+    }
+    if (!updateData.maxDistance) {
+      updateData.maxDistance = existingJob.maxDistance || 25;
     }
 
     // In updateJob, preserve requirements.notes if present

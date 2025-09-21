@@ -57,6 +57,7 @@ const JobForm = ({
       preferredTimeStart: job?.preferredTime?.start || '',
       preferredTimeEnd: job?.preferredTime?.end || '',
       requirementsNotes: (job?.requirements?.notes && typeof job.requirements.notes === 'string') ? job.requirements.notes : '',
+      maxDistance: job?.maxDistance || 25,
     },
   });
   
@@ -177,6 +178,7 @@ const JobForm = ({
       category: selectedCategory,
       budget: budgetData,
       location: locationData,
+      maxDistance: Number(data.maxDistance) || 25,
       requirements: {
         skills: requirementsSkills.length > 0 ? requirementsSkills : ['other'], // Default to 'other' if no skills
         experience: job?.requirements?.experience || 'any',
@@ -442,6 +444,24 @@ const JobForm = ({
                     />
                   </div>
                 )}
+              </div>
+              {/* Max Distance Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Max Distance (miles)
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="e.g., 25"
+                  {...register('maxDistance', {
+                    required: 'Max distance is required',
+                    min: { value: 1, message: 'Minimum is 1 mile' },
+                    max: { value: 100, message: 'Maximum is 100 miles' },
+                  })}
+                  error={errors.maxDistance?.message}
+                />
               </div>
             </div>
           </div>
