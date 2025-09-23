@@ -22,6 +22,7 @@ import DashboardPage from './pages/DashboardPage';
 import MyJobsPage from './pages/MyJobsPage';
 import SavedJobsPage from './pages/SavedJobsPage';
 import ProfilePage from './pages/ProfilePage';
+import OnboardingPage from './pages/OnboardingPage';
 import AuthPage from './pages/AuthPage'; 
 import NotFoundPage from './pages/NotFoundPage';
 import MessagingPage from './components/Messaging/MessagingPage';
@@ -138,6 +139,14 @@ function AppRoutes() {
             element={
               <SignedIn>
                 <ProfilePage />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <SignedIn>
+                <OnboardingPage />
               </SignedIn>
             }
           />
