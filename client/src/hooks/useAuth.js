@@ -2,6 +2,8 @@ import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService, registerAuthTokenGetter } from '../services/api';
+import toast from 'react-hot-toast';
+import { successMessages } from '../utils/config';
 import { storageService, storageKeys } from '../utils/config';
 
 export const useAuth = () => {
@@ -42,7 +44,11 @@ export const useAuth = () => {
     refetch: refetchProfile,
   } = useQuery({
     queryKey: ['user', 'profile'],
-    queryFn: () => apiService.auth.me(),
+    queryFn: async () => {
+      const res = await apiService.auth.me();
+      // Unwrap { success, data: user }
+      return res?.data?.data || null;
+    },
     enabled: isSignedIn && isLoaded && tokenReady,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -56,7 +62,10 @@ export const useAuth = () => {
     refetch: refetchStats,
   } = useQuery({
     queryKey: ['user', 'stats'],
-    queryFn: () => apiService.auth.getStats(),
+    queryFn: async () => {
+      const res = await apiService.auth.getStats();
+      return res?.data?.data || null;
+    },
     enabled: isSignedIn && isLoaded && tokenReady,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -68,6 +77,7 @@ export const useAuth = () => {
     onSuccess: () => {
       refetchProfile();
       refetchStats();
+      try { toast.success(successMessages.profileUpdated); } catch (_) {}
     },
   });
   
@@ -274,6 +284,7 @@ export const useAuth = () => {
     
     // Mutations
     updateProfile: updateProfileMutation.mutate,
+    updateProfileAsync: updateProfileMutation.mutateAsync,
     updateProfileLoading: updateProfileMutation.isLoading,
     
     // User preferences

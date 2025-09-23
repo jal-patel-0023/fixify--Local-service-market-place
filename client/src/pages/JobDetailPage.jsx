@@ -39,6 +39,7 @@ import AuthPrompt from '../components/Auth/AuthPrompt';
 import toast from 'react-hot-toast';
 import MapComponent from '../components/Map/Map';
 import { jobCategories, experienceLevels } from '../utils/config';
+import { calculateDistance } from '../utils/mapUtils';
 
 const JobDetailPage = () => {
   const { id } = useParams();
@@ -64,6 +65,34 @@ const JobDetailPage = () => {
     reopen: false,
     save: false
   });
+
+  // User location state
+  const [userLocation, setUserLocation] = React.useState(null);
+  const [locationLoading, setLocationLoading] = React.useState(false);
+
+  // Get user location
+  const getLocation = () => {
+    setLocationLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+          setLocationLoading(false);
+          toast.success('Location found! Distance calculated.');
+        },
+        (error) => {
+          toast.error('Location access denied or unavailable.');
+          setLocationLoading(false);
+        }
+      );
+    } else {
+      toast.error('Geolocation is not supported by this browser.');
+      setLocationLoading(false);
+    }
+  };
 
   // Fetch job details
   const { data: job, isLoading, error } = useQuery({
@@ -694,6 +723,27 @@ const JobDetailPage = () => {
                     </div>
                   </div>
 
+                  {/* Distance from user */}
+                  {userLocation && job.location?.coordinates && (
+                    <div>
+                      <h3 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2 flex items-center">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Distance from you
+                      </h3>
+                      <div className="text-primary-600 dark:text-primary-400 font-medium">
+                        {(() => {
+                          const distKm = calculateDistance(
+                            userLocation.lat,
+                            userLocation.lng,
+                            job.location.coordinates[1],
+                            job.location.coordinates[0]
+                          );
+                          return `${distKm.toFixed(1)} km`;
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
                   {job.preferredTime && (
                     <div>
                       <h3 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2 flex items-center">
@@ -710,10 +760,26 @@ const JobDetailPage = () => {
                 <div>
                   {job.location?.coordinates && Array.isArray(job.location.coordinates) && job.location.coordinates.length === 2 ? (
                     <div>
-                      <h3 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2 flex items-center">
-                        <Map className="w-4 h-4 mr-2" />
-                        Location Map
-                      </h3>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-secondary-700 dark:text-secondary-300 flex items-center">
+                          <Map className="w-4 h-4 mr-2" />
+                          Location Map
+                        </h3>
+                        {!userLocation && (
+                          <button
+                            onClick={getLocation}
+                            disabled={locationLoading}
+                            className="px-3 py-1 text-xs bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                          >
+                            {locationLoading ? (
+                              <div className="inline-block w-3 h-3 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <MapPin className="w-3 h-3 mr-1" />
+                            )}
+                            {locationLoading ? 'Getting...' : 'Find Distance'}
+                          </button>
+                        )}
+                      </div>
                       {(() => {
                         const coords = job.location?.coordinates;
                         const marker = coords && coords.length === 2 ? [{ lat: coords[1], lng: coords[0], title: job.title }] : [];
@@ -769,9 +835,23 @@ const JobDetailPage = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                      {job.maxDistance || 0}
+                      {userLocation && job.location?.coordinates ? (
+                        (() => {
+                          const distKm = calculateDistance(
+                            userLocation.lat,
+                            userLocation.lng,
+                            job.location.coordinates[1],
+                            job.location.coordinates[0]
+                          );
+                          return distKm.toFixed(1);
+                        })()
+                      ) : (
+                        job.maxDistance || 0
+                      )}
                     </div>
-                    <div className="text-sm text-secondary-600 dark:text-secondary-400">Max Distance (km)</div>
+                    <div className="text-sm text-secondary-600 dark:text-secondary-400">
+                      {userLocation ? 'Distance from you (km)' : 'Max Distance (km)'}
+                    </div>
                   </div>
                 </div>
               </div>
