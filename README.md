@@ -114,3 +114,4 @@ This project is licensed under the ISC License.
 
 
 this is charusat account edit
+now edit after getting collborator to this account
